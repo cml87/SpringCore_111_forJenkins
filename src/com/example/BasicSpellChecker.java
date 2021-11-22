@@ -1,7 +1,6 @@
 package com.example;
 
 class BasicSpellChecker implements SpellChecker {
-
     @Override
     public void checkSpelling(String emailMessage){
         if (emailMessage!=null){
@@ -11,5 +10,4 @@ class BasicSpellChecker implements SpellChecker {
             throw new RuntimeException("An exception occurred while checking the spelling.");
         }
     }
-
 }

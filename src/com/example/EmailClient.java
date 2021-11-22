@@ -6,9 +6,7 @@ class EmailClient {
     EmailClient(SpellChecker spellChecker){
         this.spellChecker = spellChecker;
     }
-
     void sendEmail (String emailMessage){
         spellChecker.checkSpelling(emailMessage);
     }
-
 }
