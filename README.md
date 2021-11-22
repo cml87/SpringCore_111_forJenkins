@@ -116,4 +116,32 @@ The Spring framework is distributed through jars. Springs wants yuo to use Maven
 to download its jars, instead of doing it manually. This is because normally 
 Spring jars will depend on other jars and Maven will take care of downloading 
 these other jars as well. In other words, Spring dependencies have dependencies 
-themselves, and Maven is a dependency management tool.
+themselves, and Maven is a dependency management tool. These other dependencies 
+are called transitive dependencies. For example, when in 
+the pom we ask for dependency 
+
+```xml
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>5.2.0.RELEASE</version>
+        </dependency>
+    </dependencies>
+```
+and we run `mvn:dependency:tree` we get
+```text
+[INFO] com.example:learn-spring-framework:jar:0.0.1-SNAPSHOT
+[INFO] \- org.springframework:spring-context:jar:5.2.0.RELEASE:compile
+[INFO]    +- org.springframework:spring-aop:jar:5.2.0.RELEASE:compile
+[INFO]    +- org.springframework:spring-beans:jar:5.2.0.RELEASE:compile
+[INFO]    +- org.springframework:spring-core:jar:5.2.0.RELEASE:compile
+[INFO]    |  \- org.springframework:spring-jcl:jar:5.2.0.RELEASE:compile
+[INFO]    \- org.springframework:spring-expression:jar:5.2.0.RELEASE:compile
+```
+ie. Maven has downloaded other 5 needed transitive dependencies. Dependency 'a' 
+needed by dependency 'b' appears below it and indented.
+
+min 12.02
+
+
