@@ -35,3 +35,8 @@ In general tight coupling will make hard maintain and test the code. For example
 if we want to test the classA above, we'll not be able to inject from outside 
 a dummy classB for unit testing.
 
+## Loose coupling
+The first step towards loose coupling is the use of interfaces. Put the methods 
+of a class we are interested on in and interface and make that class to implement 
+this interface. Then, use the interface reference, whenever we need to use a 
+method of this class.
