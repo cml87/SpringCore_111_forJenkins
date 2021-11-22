@@ -112,4 +112,8 @@ Java objects, or Spring beans, and injects them at runtime.
 
 Fig. min 5:49
 
-
+The Spring framework is distributed through jars. Springs wants yuo to use Maven 
+to download its jars, instead of doing it manually. This is because normally 
+Spring jars will depend on other jars and Maven will take care of downloading 
+these other jars as well. In other words, Spring dependencies have dependencies 
+themselves, and Maven is a dependency management tool.
