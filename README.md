@@ -1,6 +1,6 @@
 # Spring Core 1
 In this project I will follow the 52 minutes video "Spring Core Framework Tutorial | Full Course" at https://www.youtube.com/watch?v=ZwcHeLhvuq4
-It is a general instroduction to Spring Core, which seems good to me.
+It is a general introduction to Spring Core, which seems good to me.
 
 ## Spring Core general
 Spring was developed to make enterprise Java development easier, as an 
@@ -37,7 +37,7 @@ a dummy classB for unit testing.
 
 ## Loose coupling
 The first step towards loose coupling is the use of interfaces. Put the methods 
-of a class we are interested on in and interface and make that class to implement 
+of a class we are interested on in an interface and make that class to implement 
 this interface. Then, use the interface reference, whenever we need to use a 
 method of this class. For example:
 
@@ -102,11 +102,13 @@ public class EmailApplication {
 
 In this example we provide the dependency of the EmailClient class from outside.
 We _inject_ it from outside when we create the EmailClient instance. This is 
-**_Dependency Injection_**.
+**_Dependency Injection_** performed manually.  
 
 Fig. min 5:24
 
-Spring allows for automatic Dependency Injection (or Inversion of Control, IoC).
+## Spring
+
+Spring allows for automatic Dependency Injection (or **_Inversion of Control_**, IoC).
 This was, in fact, the initial purpose of the Spring framework. Spring creates the 
 Java objects, or Spring beans, and injects them at runtime.
 
@@ -115,7 +117,7 @@ Fig. min 5:49
 The Spring framework is distributed through jars. Springs wants yuo to use Maven 
 to download its jars, instead of doing it manually. This is because normally 
 Spring jars will depend on other jars and Maven will take care of downloading 
-these other jars as well. In other words, Spring dependencies have dependencies 
+those other jars as well. In other words, Spring dependencies have dependencies 
 themselves, and Maven is a dependency management tool. These other dependencies 
 are called transitive dependencies. For example, when in 
 the pom we ask for dependency 
@@ -144,4 +146,76 @@ needed by dependency 'b' appears below it and indented.
 
 min 12.02
 
+Spring creates objects and inject them into our application at runtime. This 
+functionality is provided by the Sprint **IoC Container**, which:
+- create objects
+- manage lifecycle of objects
+- inject dependencies (objects) into our code
 
+One way to specify which objects we want Spring to create and inject is 
+through an xml file. Other is through annotations.
+
+fig 13.14
+
+To use the IoC Container Spring provide us with two <u>interfaces</u>, `BeanFactory` 
+and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is 
+the recommended way to go. 
+
+Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationContext`; we 
+use this class to access the IoC container. One constructor of this class receives 
+the path to the xml file containing information about our objects and how we want to wire 
+them. This file is normally `src/main/resources/bean.xml`, and an example of 
+its content is:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="emailClient" class="com.example.EmailClient">
+        <constructor-arg ref="advancedSpellChecker"/>
+<!--        <property name="spellChecker" ref="basicSpellChecker"/>-->
+    </bean>
+
+    <bean id="basicSpellChecker" class="com.example.BasicSpellChecker">
+    </bean>
+
+    <bean id="advancedSpellChecker" class="com.example.AdvancedSpellChecker">
+    </bean>
+    <!-- more bean definitions go here -->
+
+</beans>
+```
+
+Here we have _Spring beans_ for each class of our code. Spring beans are nothing more than JavaBeans managed by the 
+Spring IoC Container. Each bean in this file will replace the new keyword when we 
+create an object.
+
+When we set the dependency of a class in its constructor, as in the `EmailClient` 
+class above, we are doing **constructor injection**. We do this in our beans definition 
+throug the tag `<constructor-arg>`. This is how we do the wiring, or dependency 
+injection, without touching our code!
+
+Beans definition files are automatically searched for in the `resources/` directory. 
+Thus, we can pass directly "beans.xml" to `ClassPathXmlApplicationContext` constructor. 
+We then get and use our beans as:
+```java
+public class EmailApplication {
+    public static void main(String[] args) {
+
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+
+        EmailClient emailClient = applicationContext.getBean("emailClient",EmailClient.class);
+        
+        emailClient.sendEmail("Hey, this is my first email message");
+
+    }
+}
+```
+It seems that when we do constructor injection we don't need to include a default 
+constructor in the parent class (`EmailClient` in the example above).
+
+
+min 19.59
