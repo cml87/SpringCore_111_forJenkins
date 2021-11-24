@@ -17,7 +17,12 @@ public class AppConfig {
     @Bean(name = "emailClient")
     public EmailClient createEmailClient(){
         //constructor injection
-        return new EmailClient(createAdvancedSpellChecker());
+       // return new EmailClient(createAdvancedSpellChecker());
+
+        //setter injection
+        EmailClient emailClient = new EmailClient();
+        emailClient.setSpellChecker(createAdvancedSpellChecker());
+        return emailClient;
     }
 
 }

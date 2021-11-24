@@ -266,7 +266,69 @@ public class EmailApplication {
         emailClient.sendEmail("Hey, this is my first email message");
     }
 }
-
 ```
 
+
+## Types of dependency injection
+There are three types of (dependency) injection:
+1. setter injection
+2. constructor injection
+3. field injection
+
+In setter injection we inject the dependencies to the class through a defined setter method, 
+whereas in the constructor injection we do it in the class constructor, as we have been doing 
+so far.
+
+Setter injection needs a default constructor (no-args) in the class where we want to inject the dependencies, 
+other than the setters. The Spring IoC will call this constructor to instantiate an object of 
+this class and then will call the setter to set, or inject, the dependency. So, to perform a 
+setter injection our `EmailClient` class would be as:
+
+```java
+class EmailClient {
+    
+    private SpellChecker spellChecker;
+    
+    public EmailClient(){}
+    
+    public void setSpellChecker(SpellChecker spellChecker) {
+        this.spellChecker = spellChecker;
+    }
+    
+    public SpellChecker getSpellChecker() {
+        return spellChecker;
+    }
+
+    void sendEmail (String emailMessage){
+        spellChecker.checkSpelling(emailMessage);
+    }
+}
+```
+The bean configuration class now needs this setter to inject the dependency:
+```java
+public class AppConfig {
+
+    @Bean(name = "basicSpellChecker")
+    public BasicSpellChecker createBasicSpellChecker(){
+        return new BasicSpellChecker();
+    }
+
+    @Bean(name = "advancedSpellChecker")
+    public AdvancedSpellChecker createAdvancedSpellChecker(){
+        return new AdvancedSpellChecker();
+    }
+
+    @Bean(name = "emailClient")
+    public EmailClient createEmailClient(){
+        //constructor injection
+        //return new EmailClient(createAdvancedSpellChecker());
+
+        //setter injection
+        EmailClient emailClient = new EmailClient();
+        emailClient.setSpellChecker(createAdvancedSpellChecker());
+        return emailClient;
+    }
+
+}
+```
 
