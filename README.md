@@ -161,6 +161,8 @@ To use the IoC Container Spring provide us with two <u>interfaces</u>, `BeanFact
 and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is 
 the recommended way to go. 
 
+### xml configuration
+
 Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationContext`; we 
 use this class to access the IoC container. One constructor of this class receives 
 the path to the xml file containing information about our objects and how we want to wire 
@@ -191,15 +193,16 @@ its content is:
 
 Here we have _Spring beans_ for each class of our code. Spring beans are nothing more than JavaBeans managed by the 
 Spring IoC Container. Each bean in this file will replace the new keyword when we 
-create an object.
+create an object. The Spring IoC container will read the configuration data from this xml file and will create
+the objects automatically.
 
 When we set the dependency of a class in its constructor, as in the `EmailClient` 
 class above, we are doing **constructor injection**. We do this in our beans definition 
-throug the tag `<constructor-arg>`. This is how we do the wiring, or dependency 
+through the tag `<constructor-arg>`. This is how we do the wiring, or dependency 
 injection, without touching our code!
 
 Beans definition files are automatically searched for in the `resources/` directory. 
-Thus, we can pass directly "beans.xml" to `ClassPathXmlApplicationContext` constructor. 
+Thus, we can pass directly `beans.xml` to `ClassPathXmlApplicationContext` constructor. 
 We then get and use our beans as:
 ```java
 public class EmailApplication {
@@ -217,5 +220,53 @@ public class EmailApplication {
 It seems that when we do constructor injection we don't need to include a default 
 constructor in the parent class (`EmailClient` in the example above).
 
+### Java configuration
 
-min 19.59
+Instead of xml configuration we can make the Spring IoC container to read bean configuration 
+from a Java configuration class. Most newly developed applications in Spring use Java configuration 
+because it is easier to understand.
+
+We create the configuration class in the root package of our project. The example below will create our beans 
+exactly in the same way as the previously seen `beans.xml` file.
+
+```java
+public class AppConfig {
+
+    @Bean(name = "basicSpellChecker")
+    public BasicSpellChecker createBasicSpellChecker(){
+        return new BasicSpellChecker();
+    }
+
+    @Bean(name = "advancedSpellChecker")
+    public AdvancedSpellChecker createAdvancedSpellChecker(){
+        return new AdvancedSpellChecker();
+    }
+
+    @Bean(name = "emailClient")
+    public EmailClient createEmailClient(){
+        //constructor injection
+        return new EmailClient(createBasicSpellChecker());
+    }
+
+}
+```
+Now we need to tell the Spring IoC container to use the new Java configuration class instead of the 
+xml file. For this we use another class implementing the `ApplicationContext` interface, 
+`AnnotationConfigApplicationContext` and pass its constructor the configuration class:
+
+```java
+public class EmailApplication {
+    public static void main(String[] args) {
+
+        //ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        EmailClient emailClient = applicationContext.getBean("emailClient",EmailClient.class);
+
+        emailClient.sendEmail("Hey, this is my first email message");
+    }
+}
+
+```
+
+
