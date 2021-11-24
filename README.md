@@ -331,4 +331,36 @@ public class AppConfig {
 
 }
 ```
+If instead we want to use xml configuration to perform a setter injection, we would 
+need to set the `beans.xml` file as
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
 
+    <bean id="emailClient" class="com.example.EmailClient">
+<!--       <constructor-arg ref="basicSpellChecker"/>-->
+           <property name="spellChecker" ref="basicSpellChecker"/>
+        </bean>
+
+        <bean id="basicSpellChecker" class="com.example.BasicSpellChecker">
+        </bean>
+
+        <bean id="advancedSpellChecker" class="com.example.AdvancedSpellChecker">
+        </bean>
+        <!-- more bean definitions go here -->
+
+</beans>
+```
+It seems that the way in which we want to inject the dependencies in a given class 
+determines how we design it, how we set the xml file or Java configuration class to 
+configure our beans, and how we get the bean from the IoC container after.
+
+Once we have decided how to inject the dependencies in our class (constructor or setter), we need to configure 
+either the beans xml file or the Java configuration class accordingly. Then, depending 
+on which of the last two we chose, we use `ClassPathXmlApplicationContext` or 
+`AnnotationConfigApplicationContext` to get the bean from the IoC container.
+
+min 29.38
