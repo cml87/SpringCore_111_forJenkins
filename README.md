@@ -556,10 +556,12 @@ Similarly, we may need it if we want to clean some additional resources in our e
 at the time of application shutdown. To achieve this we can use three types of bean lifecycle hooks:
 1. Interfaces `InitializingBean` and `DisposableBean`, the bean implements them 
 2. Annotations `@PostConstruct` and `@Predestroy` (JSR-250)
-3. Methods `initMethod()` and `destroyMethod()` of the `@Bean` annotation
+3. Methods `init()` and `destroy()` of the `@Bean` annotation
 
 We'll examine the Spring lifecycle for the _singleton_ and _prototype_ scope beans.
 
+The recommended way to interact with beans lifecycle is through the JSR-250 annotation 
+`@PostConstruct` and `@Predestroy`.
 
 ### Interfaces `InitializingBean` and `DisposableBean`
 
@@ -629,7 +631,10 @@ However, with prototype scope beans, Spring does not manage its destruction. The
 even if one of such beans implements interface `DisposableBean`, method `destroy()` on 
 them will not be called at application shutdown.
 
-
+### Annotations `@PostConstruct` and `@PreDestroy`
+... not explained properly
+### Methods `init()` and `destroy()` of the `@Bean` annotation
+... not explained properly
 
 
 

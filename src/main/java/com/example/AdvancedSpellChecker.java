@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
-@Scope("prototype")
 class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
     @Override
     public void checkSpelling(String emailMessage){
@@ -21,12 +20,12 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
     //from the DisposableBean interface
     @Override
     public void destroy() throws Exception {
-        System.out.println(">>>> Destroyed properties");
+        System.out.println(">>>> inside AdvancedSpellChecker DisposableBean.destroy()");
     }
 
     //from the InitializingBean interface
     @Override
     public void afterPropertiesSet() throws Exception {
-        System.out.println(">>>> Setting properties after bean is initialized");
+        System.out.println(">>>> inside AdvancedSpellChecker InitializingBean.afterPropertiesSet()");
     }
 }
