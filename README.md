@@ -520,6 +520,21 @@ class EmailClient {
     }
 }
 ```
+Field injection is the easiest to use, as it requires less code. However, it is not 
+recommended. See https://www.vojtechruzicka.com/field-dependency-injection-considered-harmful/.
+Spring recommends setter injection.
 
+## Beans scope
+The bean scope determines how many times the bean can be initialized in the IoC container. 
+There are 6 beans scopes:
+- **Singleton**: Default by omission. The container will create only  
+  one bean of each type, at the time of the container start-up, and then will reuse the bean
+  through the _application context_.
+- **Prototype**: a new bean is created each time it is requested.
+- Request: (Web applicatins). A unique bean will be created for each incoming HTTP _request_.
+- Session: (Web applicatins). A unique bean will be created for each incoming HTTP _session_.
+- Application: (Web applications). One bean per servlet environment ?
+- Websocket: (Web applications). One bean per websocket environment ?
 
+Usage: @Scope("singleton") annotating the bean class.
 

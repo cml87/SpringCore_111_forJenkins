@@ -20,5 +20,13 @@ public class EmailApplication {
         emailClient.sendEmail("Hey, this is my first email message");
         emailClient.sendEmail("Hey, this is my second email message");
 
+        AdvancedSpellChecker advancedSpellChecker1 = applicationContext.getBean("advancedSpellChecker",AdvancedSpellChecker.class);
+        AdvancedSpellChecker advancedSpellChecker2 = applicationContext.getBean("advancedSpellChecker",AdvancedSpellChecker.class);
+
+        System.out.println("... the same memory address should be printed as this beans has Singleton scope");
+        System.out.println("advancedSpellChecker1 is: "+advancedSpellChecker1);
+        System.out.println("advancedSpellChecker2 is: "+advancedSpellChecker2);
+
+
     }
 }
