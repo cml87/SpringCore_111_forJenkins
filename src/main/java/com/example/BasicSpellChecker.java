@@ -1,8 +1,10 @@
 package com.example;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 @Component
+@Primary
 class BasicSpellChecker implements SpellChecker {
     @Override
     public void checkSpelling(String emailMessage){

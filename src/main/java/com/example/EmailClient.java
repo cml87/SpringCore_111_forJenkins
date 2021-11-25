@@ -18,8 +18,8 @@ class EmailClient {
     }
 
     @Autowired
-    public void setSpellChecker(SpellChecker advancedSpellChecker) {
-        this.spellChecker = advancedSpellChecker;
+    public void setSpellChecker(SpellChecker spellChecker) {
+        this.spellChecker = spellChecker;
     }
 
     void sendEmail (String emailMessage){
