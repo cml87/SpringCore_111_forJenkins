@@ -487,7 +487,7 @@ lower case.
 
 import org.springframework.beans.factory.annotation.Qualifier;
 
-@Autowired
+    @Autowired
     //autowire with @Qualifier
     public void setSpellChecker(@Qualifier("advancedSpellChecker") SpellChecker spellChecker){
         this.spellChecker=spellChecker;
@@ -498,6 +498,28 @@ Autowire with @Qualifier overwrites autowire with @Primary.
 
 I think I will always use either autowire by type, with `@Primary` annotation of 
 `@Qualifier`. 
+
+We can use `@Autowired` and `@Qualifier` directly in the field dependency of the class. 
+This would be _field injection_. Spring would insert the dependency of the class through 
+the fields using reflections:
+
+```java
+@Component
+class EmailClient {
+
+    @Autowired
+    @Qualifier("advancedSpellChecker")
+    private SpellChecker spellChecker;
+
+    public SpellChecker getSpellChecker() {
+        return spellChecker;
+    }
+
+    void sendEmail (String emailMessage){
+        spellChecker.checkSpelling(emailMessage);
+    }
+}
+```
 
 
 
