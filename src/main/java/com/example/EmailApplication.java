@@ -27,6 +27,7 @@ public class EmailApplication {
         System.out.println("advancedSpellChecker1 is: "+advancedSpellChecker1);
         System.out.println("advancedSpellChecker2 is: "+advancedSpellChecker2);
 
+        ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook();
 
     }
 }

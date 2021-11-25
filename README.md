@@ -524,7 +524,7 @@ Field injection is the easiest to use, as it requires less code. However, it is 
 recommended. See https://www.vojtechruzicka.com/field-dependency-injection-considered-harmful/.
 Spring recommends setter injection.
 
-## Beans scope
+## Bean scope
 The bean scope determines how many times the bean can be initialized in the IoC container. 
 There are 6 beans scopes:
 - **Singleton**: Default by omission. The container will create only  
@@ -538,3 +538,91 @@ There are 6 beans scopes:
 
 Usage: @Scope("singleton") annotating the bean class.
 
+## Bean lifecycle
+The bean lifecycle is a set of steps Spring performs for creating, using, 
+and destroying a bean at the time of application shutdown. The lifecycle has three phases:
+1. Initialization phase: Initialize the bean, collect all the required properties and 
+   instantiate the bean.
+2. Bean usage
+3. Destruction phase: Spring destroy the beans (frees up its memory I guess).
+
+There are mainly three ways to interact with the bean lifecycle. We may need this, for 
+example, if we want to read some files and do some business logic, at the start of the application.
+Similarly, we may need it if we want to clean some additional resources in our environment, 
+at the time of application shutdown. To achieve this we can use three types of bean lifecycle hooks:
+1. Interfaces `InitializingBean` and `DisposableBean`, the bean implements them 
+2. Annotations `@PostConstruct` and `@Predestroy` (JSR-250)
+3. Methods `initMethod()` and `destroyMethod()` of the `@Bean` annotation
+
+We'll examine the Spring lifecycle for the _singleton_ scope beans.
+
+
+### Interfaces `InitializingBean` and `DisposableBean`
+
+If we make a bean implement this two interfaces, we'll need to implement methods 
+`afterPropertiesSet()` and `destroy()` which will be called by the container? after? 
+the bean is initialized, and when it is destroyed (application shutdown), 
+respectively. For example:
+```java
+@Component
+class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
+    @Override
+    public void checkSpelling(String emailMessage){
+        if (emailMessage!=null){
+            System.out.println("Advanced spelling check ...");
+            System.out.println("Spell check complete!!");
+        } else {
+            throw new RuntimeException("An exception occurred while checking the spelling.");
+        }
+    }
+
+    //from the DisposableBean interface
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("Destroyed properties");
+    }
+
+    //from the InitializingBean interface
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("Setting properties after bean is initialized");
+    }
+}
+```
+The events of beans initialization will be automatically listened by our application 
+context. An application context of type `AnnotationConfigApplicationContext` will listen 
+to them out of the box ?. However, to be able to listen for the events occurring at 
+the time of shutting down the application, we need to explicitly register a shutdown 
+hook with our application context instance. We do this calling 
+`registerShutdownHook()` on our application context instance:
+```java
+public class EmailApplication {
+    public static void main(String[] args) {
+
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        EmailClient emailClient = applicationContext.getBean("emailClient",EmailClient.class);
+
+        emailClient.sendEmail("Hey, this is my first email message");
+
+        ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook();
+
+    }
+}
+```
+Here we need down-casting since `applicationContext` is of type interface, and we need to 
+invoke with the object it is pointing to.
+
+Once the application context is listening for the shutdown events as well, as soon as it 
+detects the 'destroy event' of the `AdvanvesSpellChecker` bean, it will call method 
+`destroy()` on it ? 
+
+
+
+
+
+
+
+
+
+ 
