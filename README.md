@@ -397,6 +397,7 @@ of information to Spring there are three ways:
 - autowire by type
 - autowire by name
 - autowire with annotation `@Primary`
+- autowire with annotation `@Qualifier`
 
 Suppose we choose setter injection. In this case we _autowire by type_ specifying a 
 class (not interface) as parameter to the setter; our `EmailClient` class would be:
@@ -475,7 +476,28 @@ in its polymorphic form:
      }
     //...
 ```
+_Autowire with @Qualifier_ works similar to autowire by type. In this case we use the 
+interface reference type in the setter, but we specify which assignment compatible bean 
+we want to wire up annotating the setter parameter with `@Qualifier` and passing the 
+name of the bean. The name of the bean will be that of the class but starting with 
+lower case.
 
+```java
+    //...
+
+import org.springframework.beans.factory.annotation.Qualifier;
+
+@Autowired
+    //autowire with @Qualifier
+    public void setSpellChecker(@Qualifier("advancedSpellChecker") SpellChecker spellChecker){
+        this.spellChecker=spellChecker;
+    }
+    //...
+```
+Autowire with @Qualifier overwrites autowire with @Primary.
+
+I think I will always use either autowire by type, with `@Primary` annotation of 
+`@Qualifier`. 
 
 
 
