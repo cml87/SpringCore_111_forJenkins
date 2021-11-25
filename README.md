@@ -220,6 +220,10 @@ public class EmailApplication {
 It seems that when we do constructor injection we don't need to include a default 
 constructor in the parent class (`EmailClient` in the example above).
 
+It seems that when we initialize an application context, an instance of each bean is 
+created, even if we have not yet asked for any bean to the container. I discovered 
+this using bean lifecycle hooks (interface `InitializingBean`, see below).
+
 ### Java configuration
 
 Instead of xml configuration we can make the Spring IoC container to read bean configuration 
@@ -554,7 +558,7 @@ at the time of application shutdown. To achieve this we can use three types of b
 2. Annotations `@PostConstruct` and `@Predestroy` (JSR-250)
 3. Methods `initMethod()` and `destroyMethod()` of the `@Bean` annotation
 
-We'll examine the Spring lifecycle for the _singleton_ scope beans.
+We'll examine the Spring lifecycle for the _singleton_ and _prototype_ scope beans.
 
 
 ### Interfaces `InitializingBean` and `DisposableBean`
@@ -617,8 +621,13 @@ Once the application context is listening for the shutdown events as well, as so
 detects the 'destroy event' of the `AdvanvesSpellChecker` bean, it will call method 
 `destroy()` on it ? 
 
-
-
+If the bean annotated with `InitializingBean` is of scope _prototype_, whenever we 
+ask the container for it, a new bean will be created and returned. Since we have a hook 
+for the bean initialization events, method `afterPropertiesSet()` of this interface 
+will be called each time we ask for such bean to the container.
+However, with prototype scope beans, Spring does not manage its destruction. Therefore, 
+even if one of such beans implements interface `DisposableBean`, method `destroy()` on 
+them will not be called at application shutdown.
 
 
 
