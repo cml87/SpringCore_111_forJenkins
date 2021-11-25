@@ -363,4 +363,119 @@ either the beans xml file or the Java configuration class accordingly. Then, dep
 on which of the last two we chose, we use `ClassPathXmlApplicationContext` or 
 `AnnotationConfigApplicationContext` to get the bean from the IoC container.
 
-min 29.38
+## Autowiring
+When using either a xml configuration file, or a Java configuration class, 
+we are manually specifying which are the beans we want to create and how we want to 
+inject the dependencies a given class need (constructor or setter injection). In other 
+words we are _manually_ wiring our beans. However, Spring can do all that for us, ie. 
+it can create the beans and inject, or wire, them as needed; Spring can do _**autowiring**_.
+
+Autowiring is specially useful in big projects with many beans and dependencies among them.
+
+To perform beans autowiring, Spring first scan our project for beans, through something 
+called _Component Scanning_. We tell Spring which classes we want to make Spring beans 
+annotating them with `@Component` We tell Spring how we want to wire, or inject, them in one of 
+many possible ways, as we'll see below.  
+
+To use autowiring we still use a configuration class. However, we only need to annotate 
+this class with `@ComponenScan` specifying the base package were we want Spring to look 
+for beans, which will be classes annotated with `@Component`.
+
+```java
+@ComponentScan("com.example")
+public class AppConfig {
+}
+```
+To tell Spring how to wire our beans we use the `@Autowired` annotation in a constructor, 
+a setter method, or a field, depending on the type of dependency injection we choose. 
+
+When wiring the beans, or injecting the dependencies, Spring needs to know which of 
+the possibly many assignment compatible available beans, we want to wire up in a given 
+dependency. Remember, we will be using interfaces most of the time as dependencies in our  
+classes, and our beans will be classes implementing that interface. To give this piece 
+of information to Spring there are three ways: 
+- autowire by type
+- autowire by name
+- autowire with annotation `@Primary`
+
+Suppose we choose setter injection. In this case we _autowire by type_ specifying a 
+class (not interface) as parameter to the setter; our `EmailClient` class would be:
+
+```java
+@Component
+class EmailClient {
+    private SpellChecker spellChecker; //this is an interface
+
+    public EmailClient(){}
+
+    EmailClient(SpellChecker spellChecker){
+        this.spellChecker = spellChecker;
+    }
+
+    public SpellChecker getSpellChecker() {
+        return spellChecker;
+    }
+
+    @Autowired
+    //autowire by type
+    public void setSpellChecker(/*SpellChecker*/ BasicSpellChecker spellChecker) {
+        this.spellChecker = spellChecker;
+    }
+
+    void sendEmail (String emailMessage){
+        spellChecker.checkSpelling(emailMessage);
+    }
+}
+```
+
+_Autowire by name_ is more subtle, and I don't like it. 
+With this approach, we can still use the interface reference type in the setter, as 
+Spring will use the name of the parameter to decide which of the assignment 
+compatible beans to wire up. Suppose we want to wire a `BasicSpellChecker` with 
+this approach, the class `EmailClient` will then be:
+```java
+@Component
+class EmailClient {
+    private SpellChecker spellChecker;
+
+    public EmailClient(){}
+
+    EmailClient(SpellChecker spellChecker){
+        this.spellChecker = spellChecker;
+    }
+
+    public SpellChecker getSpellChecker() {
+        return spellChecker;
+    }
+
+    @Autowired
+    //autowire by name
+    public void setSpellChecker(SpellChecker basicSpellChecker) { 
+        this.spellChecker = basicSpellChecker;
+    }
+
+    void sendEmail (String emailMessage){
+        spellChecker.checkSpelling(emailMessage);
+    }
+}
+```
+_Autowire with the `@Primary`_ annotation works by selecting the bean annotated as such 
+whenever Spring needs to inject one of many assignment compatible beans in one
+(interface) dependency. For example, if we want to always inject an `AdvancedSpellChecker` 
+bean in the `SpellChecker` dependency of the `EmailClien` class, it would be enough to 
+annotate class `AdvancedSpellChecker` with `@Primary` and leave the setter in `EmailClient` 
+in its polymorphic form:
+
+```java
+    //...
+    @Autowired
+    //autowire with @Primary, either in the Basic or AdvancedSpellChecker class
+    public void setSpellChecker(SpellChecker spellChecker) {
+            this.spellChecker = spellChecker;
+     }
+    //...
+```
+
+
+
+
