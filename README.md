@@ -31,7 +31,7 @@ another implementation of the same method of ClassB, we will need to change
 the code. Moreover, as we only are interested in a method of ClassB, we actually 
 don't need to instantiate an object of it every time we want to call such method.
 
-In general tight coupling will make hard maintain and test the code. For example, 
+In general, tight coupling will make hard maintain and test the code. For example, 
 if we want to test the classA above, we'll not be able to inject from outside 
 a dummy classB for unit testing.
 
@@ -144,22 +144,22 @@ and we run `mvn:dependency:tree` we get
 ie. Maven has downloaded other 5 needed transitive dependencies. Dependency 'a' 
 needed by dependency 'b' appears below it and indented.
 
-min 12.02
+Spring creates objects and inject them into our application at runtime. This functionality is provided by the Sprint **IoC Container**, which create objects, inject the needed dependencies into them, and manage their lifecycle.
 
-Spring creates objects and inject them into our application at runtime. This 
-functionality is provided by the Sprint **IoC Container**, which:
-- create objects
-- manage lifecycle of objects
-- inject dependencies (objects) into our code
+There are three ways to define our bean in Spring:
+1. through xml configuration file
+2. through Java configuration class
+3. through annotations
 
-One way to specify which objects we want Spring to create and inject is 
-through an xml file. Other is through annotations.
+Each of these in turns supports dependency injection through the following mechanisms:
+1. constructor injection 
+2. setter injection
+3. field injection
 
 fig 13.14
 
 To use the IoC Container Spring provide us with two <u>interfaces</u>, `BeanFactory` 
-and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is 
-the recommended way to go. 
+and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is the recommended way to go. We'll normally  obtain our beans from an object implementing the `ApplicationContext` interface. The kind of object we'll exactly use will depend on how we decide to configure our beans. For example, if we configure our beans through a xml file, we'll use class `ClassPathXmlApplicationContext`, as shown below.
 
 ### xml configuration
 
@@ -190,16 +190,14 @@ its content is:
 
 </beans>
 ```
+#### xml: constructor injection
 
-Here we have _Spring beans_ for each class of our code. Spring beans are nothing more than JavaBeans managed by the 
-Spring IoC Container. Each bean in this file will replace the new keyword when we 
-create an object. The Spring IoC container will read the configuration data from this xml file and will create
-the objects automatically.
+The xml file above shows an example xml beans configuration, and constructor dependency injection. Here we have a _Spring bean_ for each class of our code. Spring beans are nothing more than JavaBeans managed by the Spring IoC Container. Each bean in this file will replace the `new` keyword when we create an object. The Spring IoC container will read the configuration data from this xml file and will create the objects automatically.
 
-When we set the dependency of a class in its constructor, as in the `EmailClient` 
-class above, we are doing **constructor injection**. We do this in our beans definition 
-through the tag `<constructor-arg>`. This is how we do the wiring, or dependency 
+When we set the dependency of a class in its constructor, as in the `EmailClient` class above, we are doing **constructor injection**. We do this in our beans definition through the tag `<constructor-arg>`. This is how we do the wiring, or dependency 
 injection, without touching our code!
+
+Note... In the example, our constructor has only one argument, so we don't need to specify which bean we want to inject when calling the `EmailClient` constructor in its bean definition in the xml file. When there is more than one constructor argument (we need to inject more than one dependency) ... 
 
 Beans definition files are automatically searched for in the `resources/` directory. 
 Thus, we can pass directly `beans.xml` to `ClassPathXmlApplicationContext` constructor. 
@@ -224,14 +222,22 @@ It seems that when we initialize an application context, an instance of each bea
 created, even if we have not yet asked for any bean to the container. I discovered 
 this using bean lifecycle hooks (interface `InitializingBean`, see below).
 
+#### xml: setter injection
+fadljfldfjlkjflajdlfkj ladksjf;l k
+jfl jalkfji
+
+#### xml: field injection
+afdafadsflkj lfjlkj lkfj;laksj
+kjl;kjlkj lkjlkjl lkjlkjljljaldsjflkj akfja;lj
+
 ### Java configuration
 
-Instead of xml configuration we can make the Spring IoC container to read bean configuration 
-from a Java configuration class. Most newly developed applications in Spring use Java configuration 
-because it is easier to understand.
+Instead of xml configuration we can make the Spring IoC container to read beans configuration from a Java configuration class. Most newly developed applications in Spring use Java configuration 
+because it is easier to understand. We can create the configuration class in the root package of our project. 
 
-We create the configuration class in the root package of our project. The example below will create our beans 
-exactly in the same way as the previously seen `beans.xml` file.
+#### Java: constructor injection
+
+The example below will create our beans exactly in the same way as the previously seen `beans.xml` file.
 
 ```java
 public class AppConfig {
