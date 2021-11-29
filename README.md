@@ -158,7 +158,7 @@ Each of these in turns supports dependency injection through the following mecha
 
 In the constructor injection we inject the dependencies to the class through its constructor, whereas in setter injection we do it through available setter methods.
 
-Note ...In field injection ...
+Fields injection is use only when we configure our beans through annotations.
 
 Other than the setters, setter injection needs a default constructor (no-args) in the class where we want to inject the dependencies. The Spring IoC will call this constructor to instantiate an object of this class, and then will call the setter to set, or inject, the dependency.
 
@@ -366,17 +366,21 @@ fadflkad jf
 a;lkjflajdflkjads;flkjlkfjlajf lkjf;lajflajf lakdsjf lkfjl
 
 
+
+
+
+
 ### Annotations (autowiring)
 When using either a xml configuration file, or a Java configuration class, we are manually specifying which are the beans we want to create and how we want to inject the dependencies a given class needs (constructor or setter injection). In other words we are _manually_ defining and wiring our beans, <u>all in a same file (xml or Java)</u>.
 
-However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_ The difference now is that these two operations will be done in separate files. Spring will use a Java or xml file to define where we want to look for beans, and the bean classes files themselves to set the wiring (dependency injection) type.  
+However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_ The difference now is that these two operations will be done in separate files. Spring will use a Java or xml file to define where we want to look for beans, and will use the bean classes files themselves to set the wiring (dependency injection) type.  
 
 Autowiring is specially useful in big projects with many beans and dependencies among them.
 
 When using a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package where the classes we want to make beans are:
 ```java
 @ComponentScan("com.example")
-public class AppConfig {
+    public class AppConfig {
 }
 ```
 If instead we want to do the same through a xml file, we should set it as:
@@ -395,22 +399,19 @@ The process of beans discovery, when configuring our beans through annotations, 
 
  After, to tell Spring how we want to wire our beans we use the `@Autowired` annotation in a constructor, a setter method, or a field, depending on the type of dependency injection we want to do.
 
-When wiring the beans (or injecting the dependencies) through annotations, Spring needs to know which of the possibly many assignment compatible available beans, we want to wire up in a given dependency. Remember, we will be using interfaces in most cases as dependencies in our classes, and our beans will be classes implementing those interface.
+When wiring the beans (or injecting the dependencies) through annotations in the body of the bean class, Spring needs to know which of the possibly many assignment compatible available beans, we want to wire up in a given dependency. Remember, we will be using interfaces in most cases as dependencies in our classes, and our beans will be classes implementing those interface. 
 
-To give this piece of information to Spring there are four ways, <u>all of which can be used with constructor, setter or field injection</u> !: 
+Before this piece of information was given explicitly while wiring the beans in the xml file or Java class. Now, when using annotations to wire beans, we'll have four options, <u>all of which can be used with constructor, setter or field injection</u> !: 
 1. autowire by type
 2. autowire by name
 3. autowire with annotation `@Primary`
 4. autowire with annotation `@Qualifier`
 
 #### annotations: constructor injection
-klj lkadsjf jl;fa lkjalfksj lj fkajf lkaf  l
-ljf;lkasd lkjflk 
-lkjlkj
-;lkjkljl;kj lkj lkj lkj lkjjflaks f lak 
+When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follow the same rules as for setter injection, which we discuss below.   
 
 #### annotations: setter injection
-In **_autowire by type_** we specify a class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be:
+In **_autowire by type_** we specify a precise class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be:
 
 ```java
 @Component
@@ -467,7 +468,7 @@ class EmailClient {
 }
 ```
 **_Autowire with the @Primary_** annotation works by selecting the bean annotated as such, whenever Spring needs to inject one of many assignment compatible beans in one (interface) dependency. For example, if we want to always inject an `AdvancedSpellChecker` 
-bean in the `SpellChecker` dependency of the `EmailClien` class, it would be enough to annotate class `AdvancedSpellChecker` with `@Primary`, and leave the setter in `EmailClient` in its polymorphic (interface) form:
+bean in the `SpellChecker` dependency of the `EmailClient` class, it would be enough to annotate class `AdvancedSpellChecker` with `@Primary`, and leave the setter in `EmailClient` in its polymorphic (interface) form:
 
 ```java
     //...
@@ -479,7 +480,7 @@ bean in the `SpellChecker` dependency of the `EmailClien` class, it would be eno
     //...
 ```
 **_Autowire with @Qualifier_** works similar to autowire by type. In this case we use the interface reference type in the setter, but we specify which assignment compatible bean we want to wire up annotating the setter parameter with `@Qualifier` and passing the 
-name of the bean. The name of the bean will be that of the class but starting with lower case (default if we don't explicitly specify a name for that bean).
+name of the bean. The name of the bean will be that of the class but starting with lower case (the default if we don't explicitly specify a name for that bean).
 
 ```java
     //...
@@ -500,7 +501,7 @@ __**((When to use one or another way of wiring beans with annotations ??))**__
 I think I will always use autowire by type. Otherwise, I will use the `@Primary` or `@Qualifier` annotations. 
 
 #### annotations: field injection
-We can use `@Autowired` and `@Qualifier` directly in the field dependency of the class. This would be _field injection_. Spring would insert the dependency of the class through the fields using reflections:
+Autowire by type and by name works similarly when injecting the dependencies directly through the fields of the class. We annotate the field with `@Autowired`, and we can use `@Qualifier` or `@Primary` as before. This would be _field injection_. Spring would insert the dependency of the class through the fields using reflections:
 
 ```java
 @Component
@@ -527,8 +528,7 @@ Spring recommends setter injection.
 The bean scope determines how many times the bean can be initialized in the IoC container. 
 There are 6 beans scopes:
 - **Singleton**: Default by omission. The container will create only  
-  one bean of each type, at the time of the container start-up, and then will reuse the bean
-  through the _application context_.
+  one bean of each type, at the time of the container start-up, and then will reuse the bean through the _application context_.
 - **Prototype**: a new bean is created each time it is requested.
 - Request: (Web applicatins). A unique bean will be created for each incoming HTTP _request_.
 - Session: (Web applicatins). A unique bean will be created for each incoming HTTP _session_.
