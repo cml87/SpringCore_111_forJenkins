@@ -156,9 +156,11 @@ Each of these in turns supports dependency injection through the following mecha
 2. setter injection
 3. field injection
 
+_In general, we can have (1,1), (1,2), (2,1), (2,2) and (3,1), (3,2) and (3,3)._
+
 In the constructor injection we inject the dependencies to the class through its constructor, whereas in setter injection we do it through available setter methods.
 
-Fields injection is use only when we configure our beans through annotations.
+Field injection is used only when we configure our beans through annotations. 
 
 Other than the setters, setter injection needs a default constructor (no-args) in the class where we want to inject the dependencies. The Spring IoC will call this constructor to instantiate an object of this class, and then will call the setter to set, or inject, the dependency.
 
