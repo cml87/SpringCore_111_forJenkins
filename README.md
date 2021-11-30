@@ -334,7 +334,8 @@ because it is easier to understand. We can create the configuration class in the
 
 Almost everything in Spring can now be configured using Java configuration.
 
-The configuration class can be annotated with `@Configuration` which give other functionalities that I still don't understand.
+The configuration class can be annotated with `@Configuration` which give other functionalities that I still don't understand. But this annotation will mark configuration classes that we can pass to 
+`AnnotationConfigApplicationContext` to initialize the container with the beans in all of them.
 
 #### Java: constructor injection
 
