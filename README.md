@@ -1,12 +1,82 @@
 # Spring Core 1
-In this project I will follow the 52 minutes video "Spring Core Framework Tutorial | Full Course" at https://www.youtube.com/watch?v=ZwcHeLhvuq4
+In this project I will follow the 52 minutes video
+<span style="color:aquamarine">Spring Core Framework Tutorial | Full Course</span>.
+at https://www.youtube.com/watch?v=ZwcHeLhvuq4
 It is a general introduction to Spring Core, which seems good to me.
 
+Enriched with content from course <span style="color:aquamarine">Spring Framework: Spring Fundamentals</span>, by Bryan Hansen **pluralsight**
+
 ## Spring Core general
-Spring was developed to make enterprise Java development easier, as an 
-improvement over EJBs. It holds to many best practices and well known design 
-patterns. It allows us to actually write better Java code, because it allows 
-for loosely coupled classes and more testable code.
+Spring was developed to make enterprise Java development (already existing tasks) easier, as an improvement over EJBs. It holds to many best practices and well known design patterns. It allows us to actually write better Java code, because it allows for loosely coupled classes and more testable code. It makes our application configurable, instead of using hard coded settings.
+
+Spring started out just and IoC (**Inversion of Control**) container, a technique also called dependency injection. It was conceived to reduce or replace some of the complex configuration in early Java EE applications. **_Later_**, Spring started to build around building enterprise applications without EJBs. They initially were just figuring out how to work better with EJBs, but then discovered that EJBs were actually not needed for a lot of situations.
+
+Dependency injection is removing hard coded wiring in our app. and using a framework to inject dependencies and resources where they are needed.
+
+Spring can essentially be used with or without EJBs, but nowadays it is primarily used without them. No needs of EJBs means no need of an application server, such as Wildfly. So Spring allows developing enterprise applications without an application server. Spring only need a web server, and by defaults uses Tomcat (easy to use and lightweight). Before Spring it was not easy to have enterprise features in an application deployed in Tomcat.
+
+<u>Spring is completely POJO based and interface driven</u>. Springs uses AOP and Proxies to apply things as transactions to our code to get those 'cross cutting concerns' ? out of our code, producing smaller and lightweight applications.
+
+Spring is built around best practices. It uses well known Design Patterns such as Singleton, Factory, Abstract Factory. Template method is used a lot.
+
+**What problems Spring solves?**
+1. Increases Testability
+2. Increases Maintainability
+3. Helps with Scalability
+4. Helps with decoupling and caching
+5. Helps in reducing code complexity
+6. Helps in focusing in the business logic by removing boilerplate configuration code.
+
+
+Spring allows reducing this
+```java
+public Car getById(String id) {
+    Connection con = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+        String sql = "select * from CAR where ID = ?";
+        con = DriverManager.getConnection("localhost:3306/cars");
+        stmt = con.prepareStatement(sql);
+        stmt.setString(1, id);
+        rs = stmt.executeQuery();
+        if (rs.next()) {
+            Car car = new Car();
+            car.setMake(rs.getString(1));
+            return car;
+        } else {
+            return null;
+        }
+    } catch (SQLException e) { e.printStackTrace();}
+    finally {
+        try {
+            if(rs != null && !rs.isClosed()) {
+                rs.close();
+            }
+        } catch (Exception e) {}
+    }
+    return null;
+}
+```
+to this
+```java
+// Spring JDBC template method
+public Car findCar(String id) {
+    return getEntityManager().find(Car.class, id);
+}
+```
+This is Spring JDBC template code. This is business focus !
+
+Spring allow three types of configuration:
+1. Annotation based configuration
+2. Xml based configuration
+3. Java based configuration
+
+In Spring, the **Application Context** is the configured Spring IoC container with all our dependencies wired up in it. It is _mainly_ a hashmap of objects.
+
+Spring can also be used as a registry ?
+
 
 ## Tight coupling 
 Classes can have fields of reference type, for example classes. Usually we'll 
@@ -114,8 +184,7 @@ Java objects, or Spring beans, and injects them at runtime.
 
 Fig. min 5:49
 
-The Spring framework is distributed through jars. Springs wants yuo to use Maven 
-to download its jars, instead of doing it manually. This is because normally 
+The Spring framework is distributed through jars. Springs wants yuo to use Maven or Gradle, to download its jars, instead of doing it manually. This is because normally 
 Spring jars will depend on other jars and Maven will take care of downloading 
 those other jars as well. In other words, Spring dependencies have dependencies 
 themselves, and Maven is a dependency management tool. These other dependencies 
@@ -146,7 +215,7 @@ needed by dependency 'b' appears below it and indented.
 
 Spring creates objects and inject them into our application at runtime. This functionality is provided by the Sprint **IoC Container**, which create objects, inject the needed dependencies into them, and manage their lifecycle.
 
-There are three ways to define our bean in Spring:
+There are three ways to define and configure our bean in Spring:
 1. through xml configuration file
 2. through Java configuration class
 3. through annotations
@@ -227,9 +296,9 @@ public class EmailApplication {
 It seems that when we do constructor injection we don't need to include a default 
 constructor in the parent class (`EmailClient` in the example above).
 
-It seems that when we initialize an application context, an instance of each bean is 
-created, even if we have not yet asked for any bean to the container. I discovered 
-this using bean lifecycle hooks (interface `InitializingBean`, see below).
+The **Application Context** is Spring "container" of configured and managed beans. In other words, it is the set of Spring beans autowired.
+
+It seems that when we initialize an application context, an instance of each bean is created, even if we have not yet asked for any bean to the container. I discovered this using bean lifecycle hooks (interface `InitializingBean`, see below).
 
 #### xml: setter injection
 Setter injection with a xml configuration is performed as:
@@ -262,6 +331,10 @@ kjl;kjlkj lkjlkjl lkjlkjljljaldsjflkj akfja;lj
 
 Instead of xml configuration we can make the Spring IoC container to read beans configuration from a Java configuration class. Most newly developed applications in Spring use Java configuration 
 because it is easier to understand. We can create the configuration class in the root package of our project. 
+
+Almost everything in Spring can now be configured using Java configuration.
+
+The configuration class can be annotated with `@Configuration` which give other functionalities that I still don't understand.
 
 #### Java: constructor injection
 
