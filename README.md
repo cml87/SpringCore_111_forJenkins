@@ -452,11 +452,11 @@ When using either a xml configuration file, or a Java configuration class, we ar
 
 However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_ The difference now is that these two operations will be done in separate files. Spring will use a Java or xml file to define where we want to look for beans, and will use the bean classes files themselves to set the wiring (dependency injection) type.  
 
-Autowiring is specially useful in big projects with many beans and dependencies among them.
+Autowiring is specially useful in big projects with many beans and dependencies among them. It is an example of _"convention over configuration"_. 
 
-When using a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package where the classes we want to make beans are:
+When using a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package(s) where the classes we want to make beans are:
 ```java
-@ComponentScan("com.example")
+@ComponentScan({"com.example"})
     public class AppConfig {
 }
 ```
@@ -483,6 +483,8 @@ Before this piece of information was given explicitly while wiring the beans in 
 2. autowire by name
 3. autowire with annotation `@Primary`
 4. autowire with annotation `@Qualifier`
+
+When using `@Autowired` to wire, or inject, dependencies, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated method inside a Java configuration class.
 
 #### annotations: constructor injection
 When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follow the same rules as for setter injection, which we discuss below.   
