@@ -342,6 +342,7 @@ The configuration class can be annotated with `@Configuration` which give other 
 The example below will create our beans exactly in the same way as the previously seen `beans.xml` file.
 
 ```java
+//@Configuration ??
 public class AppConfig {
 
     @Bean(name = "basicSpellChecker")
@@ -606,12 +607,43 @@ There are 6 beans scopes:
 - **Singleton**: Default by omission. The container will create only  
   one bean of each type, at the time of the container start-up, and then will reuse the bean through the _application context_.
 - **Prototype**: a new bean is created each time it is requested.
-- Request: (Web applicatins). A unique bean will be created for each incoming HTTP _request_.
-- Session: (Web applicatins). A unique bean will be created for each incoming HTTP _session_.
-- Application: (Web applications). One bean per servlet environment ?
-- Websocket: (Web applications). One bean per websocket environment ?
 
-Usage: @Scope("singleton") annotating the bean class.
+Web scopes:
+- Request: (Web applications). A unique bean will be created for each incoming HTTP _request_.
+- Session: (Web applications, Spring MVC). A unique bean will be created for each incoming HTTP _session_.
+- GlobalSession: (Web applications, Spring MVC) Will returns a single bean per application deployment or server reboot.
+
+Usage: @Scope("singleton") annotating the bean class, or the method, annotated with `@Bean` and that returns a bean, in a Java configuration classes. Eg:
+
+
+
+```java
+
+@Configuration
+public class AppConfig {
+
+    @Bean(name = "speakerService")
+    //@Scope(value = "singleton")
+    @Scope(value = BeanDefinition.SCOPE_SINGLETON)
+    public SpeakerService getSpeakerService(){
+        // setter injection
+        // SpeakerServiceImpl speakerServiceImpl = new SpeakerServiceImpl();
+        //speakerServiceImpl.setSpeakerRepository(getSpeakerRepository());
+
+        // constructor injection
+        SpeakerServiceImpl speakerServiceImpl = new SpeakerServiceImpl(getSpeakerRepository());
+        return speakerServiceImpl;
+    }
+
+    @Bean(name = "speakerRepository")
+    public SpeakerRepository getSpeakerRepository(){
+        return new HibernateSpeakerRepositoryImpl();
+    }
+}
+```
+
+### Singleton scope
+If a bean has Singleton scope, there will be only one instance per Spring container or application context. Not exactly one instance per JVM, because we may have more than one Spring container in our JVM.
 
 ## Bean lifecycle
 The bean lifecycle is a set of steps Spring performs for creating, using, 
