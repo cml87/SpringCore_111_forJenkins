@@ -474,7 +474,7 @@ https://www.springframework.org/schema/beans/spring-beans.xsd">
 ```
 The process of beans discovery, when configuring our beans through annotations, is called _Component Scanning_. Classes we want to be discovered in the component scan need to be annotated with `@Component` though.
 
- After, to tell Spring how we want to wire our beans we use the `@Autowired` annotation in a constructor, a setter method, or a field, depending on the type of dependency injection we want to do.
+ After, to tell Spring how we want to wire our beans we use the `@Autowired` <u>annotation in a constructor, a setter method, or a field</u>, depending on the type of dependency injection we want to do.
 
 When wiring the beans (or injecting the dependencies) through annotations in the body of the bean class, Spring needs to know which of the possibly many assignment compatible available beans, we want to wire up in a given dependency. Remember, we will be using interfaces in most cases as dependencies in our classes, and our beans will be classes implementing those interface. 
 
@@ -484,10 +484,13 @@ Before this piece of information was given explicitly while wiring the beans in 
 3. autowire with annotation `@Primary`
 4. autowire with annotation `@Qualifier`
 
-When using `@Autowired` to wire, or inject, dependencies, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated method inside a Java configuration class.
+When using `@Autowired` to wire, or inject, dependencies, through setter injection, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated method inside a Java configuration class. This would be an hibrid approach and affects code readability in my opinion.
+
+However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting). This is the most convenient way: going with will autowiring and using the stereotype annotations to define our beans.
 
 #### annotations: constructor injection
 When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follow the same rules as for setter injection, which we discuss below.   
+All the beans needed to successfully do the dependency injection need to be defined with `@Component` (or some stereotype annotation), and there should be Java configuration class with the `@ComponentScan`.
 
 #### annotations: setter injection
 In **_autowire by type_** we specify a precise class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be:
