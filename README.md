@@ -350,6 +350,69 @@ Setter injection with a xml configuration is performed as:
 
 </beans>
 ```
+
+#### xml: autowiring
+Yes, we can do autowiring with xml configuration as well, with no annotations.
+
+Before we saw that when defining the beans in a xml file, we also define explicitly how we want to inject the dependencies in each of them. We used elements `<constructor-arg>` for the case of constructor injection, and `<property>` for the case of setter injection.
+
+However, we can instruct Spring to do a constructor or setter injection for us to wire-up the dependencies a given bean needs, as far as the bean class has the needed setters and constructor to perform the injection of its dependency. This is how we would do it:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean name="speakerRepository"
+          class = "com.example.conference.repository.HibernateSpeakerRepositoryImpl"/>
+
+    <bean name="speakerService" class="com.example.conference.service.SpeakerServiceImpl" autowire="constructor">
+    </bean>
+
+</beans>
+```
+Here Spring will call the constructor of the `SpeakerServiceImpl` class to set the dependency `speakerRepository` this class has, passing as argument the bean `speakerRepository`, which is the only bean assignment compatible available.
+
+Autowire using the setter would need instead the autowire parameter as `autowire="byType"` or `autowire="byName"`. 
+
+In both these cases the setter named ("camelcased") after the dependency type (not its name!) we want to inject will be called.
+
+The difference is in how we tell Spring to pick up the bean to be injected. 
+
+In `autowire="byType"` Spring will look for any setter having as argument an assignment compatible bean, so he can call it with an available bean to be injected as dependency. If there are several available assignment compatible beans though (many classes implementing the same interface), we need to further specify to Spring which one we want to inject. For this, see the discussion below for autowiring by type, by name and with using `@Primary` or `@Qualifier`, I made below, when talking about autowiring with annotation.
+
+In `autowire="byName"` Spring will look for a setter exactly named after the declared type (not the name) of the dependency to be injected in the bean, and camelcased. For example, if the dependency is `private SpeakerRepository speakerRepositoryBlue;`, the setter must be called `setSpeakerRepository()`. 
+
+The bean to be injected must always be declared somewhere though, for example in the same xml beans config file. For the case of the xml config file show above, the `SpeakerServieImpl` class may be implemented as:
+```java
+public class SpeakerServiceImpl implements SpeakerService {
+
+    private SpeakerRepository speakerRepository; 
+    
+    public SpeakerServiceImpl() {
+        System.out.println("calling SpeakerServiceImpl no-arg constructor ...");
+    }
+
+    public SpeakerServiceImpl(SpeakerRepository speakerRepository) {
+        System.out.println("calling SpeakerServiceImpl argument constructor ...");
+        this.speakerRepository = speakerRepository;
+    }
+
+    public void setSpeakerRepository(SpeakerRepository speakerRepository) {
+        System.out.println("calling setter in SpeakerServiceImpl ... ");
+        this.speakerRepository = speakerRepository;
+    }
+
+    @Override
+    public List<Speaker> findAll(){
+        return speakerRepository.findAll();
+    }
+}
+```
+
+Wiring errors will cause <u>runtime</u> exceptions!
+
 #### xml: field injection
 afdafadsflkj lfjlkj lkfj;laksj
 kjl;kjlkj lkjlkjl lkjlkjljljaldsjflkj akfja;lj
