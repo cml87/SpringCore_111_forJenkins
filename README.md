@@ -13,9 +13,9 @@ Spring started out just and IoC (**Inversion of Control**) container, a techniqu
 
 Dependency injection is removing hard coded wiring in our app. and using a framework to inject dependencies and resources where they are needed.
 
-Spring can essentially be used with or without EJBs, but nowadays it is primarily used without them. No needs of EJBs means no need of an application server, such as Wildfly. So Spring allows developing enterprise applications without an application server. Spring only need a web server, and by defaults uses Tomcat (easy to use and lightweight). Before Spring it was not easy to have enterprise features in an application deployed in Tomcat.
+Spring can essentially be used with or without EJBs, but nowadays, it is primarily used without them. No needs of EJBs means no need of an application server, such as Wildfly. So Spring allows developing enterprise applications without an application server. Spring only need a web server, and by defaults uses Tomcat (easy to use and lightweight). Before Spring it was not easy to have enterprise features in an application deployed in Tomcat.
 
-<u>Spring is completely POJO based and interface driven</u>. Springs uses AOP and Proxies to apply things as transactions to our code to get those 'cross cutting concerns' ? out of our code, producing smaller and lightweight applications.
+<u>Spring is completely POJO based and interface driven</u>. Springs uses AOP and Proxies to apply things as transactions to our code to get those 'cross-cutting concerns' ? out of our code, producing smaller and lightweight applications.
 
 Spring is built around best practices. It uses well known Design Patterns such as Singleton, Factory, Abstract Factory. Template method is used a lot.
 
@@ -241,11 +241,7 @@ and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` an
 
 ### xml configuration
 
-Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationContext`; we 
-use this class to access the IoC container. One constructor of this class receives 
-the path to the xml file containing information about our objects and how we want to wire 
-them. This file is normally `src/main/resources/bean.xml`, and an example of 
-its content is:
+Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationContext`; we use this class to access the IoC container. One constructor of this class receives the path to the xml file containing information about our objects and how we want to wire them. This file is normally `src/main/resources/bean.xml`, and an example of its content is:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -268,6 +264,9 @@ its content is:
 
 </beans>
 ```
+
+A standard name for this file is `applicationContext.xml`. Even though this modality to configure Spring beans is not popular anymore (now people prefer Java configuration and annotations) it actually allows for a better separation of concerns.  
+
 #### xml: constructor injection
 
 The xml file above shows an example xml beans configuration, and constructor dependency injection. Here we have a _Spring bean_ for each class of our code. Spring beans are nothing more than JavaBeans managed by the Spring IoC Container. Each bean in this file will replace the `new` keyword when we create an object. The Spring IoC container will read the configuration data from this xml file and will create the objects automatically.
@@ -449,11 +448,12 @@ a;lkjflajdflkjads;flkjlkfjlajf lkjf;lajflajf lakdsjf lkfjl
 ### Annotations (autowiring)
 When using either a xml configuration file, or a Java configuration class, we are manually specifying which are the beans we want to create and how we want to inject the dependencies a given class needs (constructor or setter injection). In other words we are _manually_ defining and wiring our beans, <u>all in a same file (xml or Java)</u>.
 
-However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_ The difference now is that these two operations will be done in separate files. Spring will use a Java or xml file to define where we want to look for beans, and will use the bean classes files themselves to set the wiring (dependency injection) type.  
+However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_ The difference now is that these two operations will be done in separate files. Spring will use a Java or xml file to define where we want to look for beans. Spring will use then the very bean classes files to define which classes will be beans and to set the wiring (dependency injection) type.  
 
-Autowiring is specially useful in big projects with many beans and dependencies among them. It is an example of _"convention over configuration"_. 
+Autowiring is specially useful in big projects with many beans and dependencies among them. It is an example of _"convention over configuration"_.
 
-When using a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package(s) where the classes we want to make beans are:
+### Autowiring: where are the beans?
+If we want to use a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package(s) where the classes we want to make beans are:
 ```java
 @ComponentScan({"com.example"})
     public class AppConfig {
@@ -473,8 +473,83 @@ https://www.springframework.org/schema/beans/spring-beans.xsd">
 ```
 The process of beans discovery, when configuring our beans through annotations, is called _Component Scanning_. Classes we want to be discovered in the component scan need to be annotated with `@Component` though.
 
- After, to tell Spring how we want to wire our beans we use the `@Autowired` <u>in a constructor, a setter method, or a field</u>, depending on the type of dependency injection we want to do. Notice that the beans to be autowired can be defined either through `@Component` annotated classes, as we saw before, or through `@Bean` annotated methods in a Java configuration class.
+### Autowiring: which are the bean classes and how to do the wiring 
+The beans to be autowired can be defined either through `@Component` annotated classes, as we just saw, but can also be defined through `@Bean` annotated methods in a Java configuration class. For example, the bean `speakerRepository` is defined in the Java configuration file below, and is injected through setter in the class `SpeakerServiceImpl`:
+```java
+@Configuration
+public class AppConfig {
 
+    // this return a service configured with a given repository
+    // Here we do setter injection. The class where we want to inject the dependency this way must have the
+    // needed setter to inject the dependency from outside. The same holds for constructor injection
+    @Bean(name = "speakerService")
+    //@Scope(value = "singleton")
+    @Scope(value = BeanDefinition.SCOPE_SINGLETON)
+    public SpeakerService getSpeakerService(){
+        // setter injection
+        // SpeakerServiceImpl speakerServiceImpl = new SpeakerServiceImpl();
+        //speakerServiceImpl.setSpeakerRepository(getSpeakerRepository());
+
+        // constructor injection
+        //SpeakerServiceImpl speakerServiceImpl = new SpeakerServiceImpl(getSpeakerRepository());
+        SpeakerServiceImpl speakerServiceImpl = new SpeakerServiceImpl();
+
+        return speakerServiceImpl;
+    }
+
+    @Bean(name = "speakerRepository")
+    public SpeakerRepository getSpeakerRepository(){
+        return new HibernateSpeakerRepositoryImpl();
+    }
+}
+```
+```java
+public class SpeakerServiceImpl implements SpeakerService {
+
+    // we'll inject this from outside
+    private SpeakerRepository speakerRepository;// = new HibernateSpeakerRepositoryImpl();
+
+    public SpeakerServiceImpl() {
+        System.out.println("SpeakerServiceImpl no args constructor");
+    }
+
+    public SpeakerServiceImpl(SpeakerRepository speakerRepository) {
+        System.out.println("SpeakerServiceImpl repository constructor");
+        this.speakerRepository = speakerRepository;
+    }
+
+    // Spring will look for a bean assignment compatible with 'SpeakerRepository' and will wire it
+    // with the dependency speaker repository in this class.
+    // That other bean can be defined inside a Java configuration class or annotated with @Component
+    @Autowired
+    public void setSpeakerRepository(SpeakerRepository speakerRepository) {
+        System.out.println("SpeakerServiceImpl setter");
+        this.speakerRepository = speakerRepository;
+    }
+
+    @Override
+    public List<Speaker> findAll(){
+        return speakerRepository.findAll();
+    }
+}
+```
+```java
+public class HibernateSpeakerRepositoryImpl implements SpeakerRepository {
+    @Override
+    public List<Speaker> findAll(){
+        List<Speaker> speakers = new ArrayList<>();
+        Speaker speaker = new Speaker();
+        speaker.setFirstName("Brian");
+        speaker.setLastName("Hansen");
+        speakers.add(speaker);
+        return speakers;
+    }
+}
+```
+
+After we have told Spring where to look for bean classes and which will be the bean classes, to tell him how we want to wire our beans we use the `@Autowired` annotation. This annotation goes at <u>a constructor, a setter method, or a field</u> level, depending on the type of dependency injection we want to do. 
+
+### Autowiring disambiguation
 When wiring the beans (or injecting the dependencies) through annotations in the body of the bean class, Spring needs to know which of the possibly many assignment compatible available beans, we want to wire up in a given dependency. Remember, we will be using interfaces in most cases as dependencies in our classes, and our beans will be classes implementing those interface. 
 
 Before this piece of information was given explicitly while wiring the beans in the xml file or Java class. Now, when using annotations to wire beans, we'll have four options, <u>all of which can be used with constructor, setter or field injection</u> !: 
@@ -485,19 +560,19 @@ Before this piece of information was given explicitly while wiring the beans in 
 
 When using `@Autowired` to wire, or inject, dependencies, through setter injection, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated methods inside a Java configuration class. This would be a hybrid approach and affects code readability in my opinion.
 
-However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting). This is the most convenient way: going with will autowiring and using the stereotype annotations to define our beans.
+However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting, the hybrid approach didn't work for me in this case). This is the most convenient way: going with will autowiring and using the stereotype annotations to define our beans.
 
-#### annotations: constructor injection
+#### Autowiring: constructor injection
 When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follow the same rules as for setter injection, which we discuss below.   
 All the beans needed to successfully do the dependency injection need to be defined with `@Component` (or some stereotype annotation), and there should be Java configuration class with the `@ComponentScan`.
 
-#### annotations: setter injection
+#### Autowiring: setter injection
 Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
 
 In **_autowire by type_** we specify a precise class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be:
 
 ```java
-@Component
+@Component("emailClient")
 class EmailClient {
     private SpellChecker spellChecker; //this is an interface
 
@@ -608,13 +683,13 @@ Field injection is the easiest to use, as it requires less code. However, it is 
 Spring recommends setter injection.
 
 ## Stereotype annotations
-Stereotype annotations are:
-- `@Component`:
-  - `@Repository`: Used to denote classes used as repository objects.
-- `@Service`: It doesn't mean a web service or a microservice. It means where we put our business logic
+Bean classes can be marked through any of the so called _stereotype annotations_ are:
+- `@Component`: Used for general purpose beans.
+- `@Repository`: Used to denote classes used as repository objects.
+- `@Service`: Used for business logic beans. It doesn't mean a web service or a microservice. 
 - `@Controller`: used in Spring MVC
 
-We can use filters to look for specific types of annotations.
+We can use filters to look for specific types of annotations. We can pass as argument the name we want for the bean that will be created with these annotations, eg `@Service("speakerService")`.
 
 
 ## Bean scope
@@ -630,10 +705,9 @@ Web scopes:
 - Session: (Web applications, Spring MVC). A unique bean will be created for each user HTTP _session_.
 - GlobalSession: (Web applications, Spring MVC) Will returns a single bean per application deployment or server reboot.
 
-Usage: @Scope("singleton") annotating the bean class annotated with `@Component`. If we use Java configuration, use this annotation in the  `@Bean` annotated method. This is the method that returns the bean, eg:
+To define a bean's scope we use the `@Scope` annotation, eg. `@Scope("singleton")` on the bean class annotated with `@Component`. If we use Java configuration, we use this annotation in the  `@Bean` annotated method. This is the method that returns the bean, eg:
 
 ```java
-
 @Configuration
 public class AppConfig {
 
