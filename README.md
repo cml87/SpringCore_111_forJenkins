@@ -329,8 +329,7 @@ kjl;kjlkj lkjlkjl lkjlkjljljaldsjflkj akfja;lj
 
 ### Java configuration
 
-Instead of xml configuration we can make the Spring IoC container to read beans configuration from a Java configuration class. Most newly developed applications in Spring use Java configuration 
-because it is easier to understand. We can create the configuration class in the root package of our project. 
+Instead of xml configuration we can make the Spring IoC container to read beans configuration from a Java configuration class. Most newly developed applications in Spring use Java configuration because it is easier to understand. We can create the configuration class in the root package of our project. 
 
 Almost everything in Spring can now be configured using Java configuration.
 
@@ -339,7 +338,7 @@ The configuration class can be annotated with `@Configuration` which give other 
 
 #### Java: constructor injection
 
-The example below will create our beans exactly in the same way as the previously seen `beans.xml` file.
+The example below will create our beans exactly in the same way as the previously seen `beans.xml` file. As can be seen, now the beans will be created through methods annotated with `@Bean`, which will be called automatically by Spring when the application context is started. The `@Bean` annotation can be used only at a method level.
 
 ```java
 //@Configuration ??
@@ -474,7 +473,7 @@ https://www.springframework.org/schema/beans/spring-beans.xsd">
 ```
 The process of beans discovery, when configuring our beans through annotations, is called _Component Scanning_. Classes we want to be discovered in the component scan need to be annotated with `@Component` though.
 
- After, to tell Spring how we want to wire our beans we use the `@Autowired` <u>annotation in a constructor, a setter method, or a field</u>, depending on the type of dependency injection we want to do.
+ After, to tell Spring how we want to wire our beans we use the `@Autowired` <u>in a constructor, a setter method, or a field</u>, depending on the type of dependency injection we want to do. Notice that the beans to be autowired can be defined either through `@Component` annotated classes, as we saw before, or through `@Bean` annotated methods in a Java configuration class.
 
 When wiring the beans (or injecting the dependencies) through annotations in the body of the bean class, Spring needs to know which of the possibly many assignment compatible available beans, we want to wire up in a given dependency. Remember, we will be using interfaces in most cases as dependencies in our classes, and our beans will be classes implementing those interface. 
 
@@ -484,7 +483,7 @@ Before this piece of information was given explicitly while wiring the beans in 
 3. autowire with annotation `@Primary`
 4. autowire with annotation `@Qualifier`
 
-When using `@Autowired` to wire, or inject, dependencies, through setter injection, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated method inside a Java configuration class. This would be an hibrid approach and affects code readability in my opinion.
+When using `@Autowired` to wire, or inject, dependencies, through setter injection, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated methods inside a Java configuration class. This would be a hybrid approach and affects code readability in my opinion.
 
 However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting). This is the most convenient way: going with will autowiring and using the stereotype annotations to define our beans.
 
@@ -493,6 +492,8 @@ When we want to do autowire by constructor we annotate the constructor with `@Au
 All the beans needed to successfully do the dependency injection need to be defined with `@Component` (or some stereotype annotation), and there should be Java configuration class with the `@ComponentScan`.
 
 #### annotations: setter injection
+Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
+
 In **_autowire by type_** we specify a precise class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be:
 
 ```java
@@ -606,21 +607,30 @@ Field injection is the easiest to use, as it requires less code. However, it is 
 
 Spring recommends setter injection.
 
+## Stereotype annotations
+Stereotype annotations are:
+- `@Component`:
+  - `@Repository`: Used to denote classes used as repository objects.
+- `@Service`: It doesn't mean a web service or a microservice. It means where we put our business logic
+- `@Controller`: used in Spring MVC
+
+We can use filters to look for specific types of annotations.
+
+
 ## Bean scope
 The bean scope determines how many times the bean can be initialized in the IoC container. 
 There are 6 beans scopes:
+Scopes valid in any configuration:
 - **Singleton**: Default by omission. The container will create only  
   one bean of each type, at the time of the container start-up, and then will reuse the bean through the _application context_.
-- **Prototype**: a new bean is created each time it is requested.
+- **Prototype**: a new bean is created each time it is requested to the container.
 
 Web scopes:
 - Request: (Web applications). A unique bean will be created for each incoming HTTP _request_.
-- Session: (Web applications, Spring MVC). A unique bean will be created for each incoming HTTP _session_.
+- Session: (Web applications, Spring MVC). A unique bean will be created for each user HTTP _session_.
 - GlobalSession: (Web applications, Spring MVC) Will returns a single bean per application deployment or server reboot.
 
-Usage: @Scope("singleton") annotating the bean class, or the method, annotated with `@Bean` and that returns a bean, in a Java configuration classes. Eg:
-
-
+Usage: @Scope("singleton") annotating the bean class annotated with `@Component`. If we use Java configuration, use this annotation in the  `@Bean` annotated method. This is the method that returns the bean, eg:
 
 ```java
 
@@ -648,7 +658,7 @@ public class AppConfig {
 ```
 
 ### Singleton scope
-If a bean has Singleton scope, there will be only one instance per Spring container or application context. Not exactly one instance per JVM, because we may have more than one Spring container in our JVM.
+If a bean has Singleton scope, there will be only one instance per Spring container or application context, not exactly one instance per JVM. We may have more than one Spring container in our JVM.
 
 ## Bean lifecycle
 The bean lifecycle is a set of steps Spring performs for creating, using, 
