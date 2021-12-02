@@ -277,10 +277,35 @@ The xml file above shows an example xml beans configuration, and constructor dep
 When we set the dependency of a class in its constructor, as in the `EmailClient` class above, we are doing **constructor injection**. We do this in our beans definition through the tag `<constructor-arg>`. This is how we do the wiring, or dependency 
 injection, without touching our code!
 
-Note... In the example, our constructor has only one argument, so we don't need to specify which bean we want to inject when calling the `EmailClient` constructor in its bean definition in the xml file. When there is more than one constructor argument (we need to inject more than one dependency) ... 
+Constructor injection is index based, which means we have to specify the index of the constructor arguments in the xml file. Setter injection is name based instead. Eg:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-Beans definition files are automatically searched for in the `resources/` directory. 
-Thus, we can pass directly `beans.xml` to `ClassPathXmlApplicationContext` constructor. 
+    <bean name="speakerRepository"
+          class = "com.example.conference.repository.HibernateSpeakerRepositoryImpl"/>
+
+    <bean name="speakerService" class="com.example.conference.service.SpeakerServiceImpl">
+        <!--=setter injection-->
+        <!--since the property name here is 'speakerRepository', the setter that will be called
+         automatically to set it will be setSpeakerRepository(). This is a convention! -->
+        <!--<property name="speakerRepository" ref="speakerRepository"/>-->
+
+        <!--constructor injection-->
+        <constructor-arg index="0" ref="speakerRepository"/>
+        <!--<constructor-arg index="1" ref="anotherReferenceDependency"/>-->
+
+    </bean>
+
+</beans>
+```
+
+In the example below, our constructor has only one argument, so we don't need to specify which bean we want to inject when calling the `EmailClient` constructor in its bean definition in the xml file. When there is more than one constructor argument (we need to inject more than one dependency) we use the index parameter in the `constructor-arg` element, as shown above. 
+
+Beans definition files are automatically searched for in the `resources/` directory. Thus, we can pass directly `beans.xml` to `ClassPathXmlApplicationContext` constructor. 
 We then get and use our beans as:
 ```java
 public class EmailApplication {
