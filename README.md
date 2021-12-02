@@ -265,7 +265,10 @@ Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationCont
 </beans>
 ```
 
-A standard name for this file is `applicationContext.xml`. Even though this modality to configure Spring beans is not popular anymore (now people prefer Java configuration and annotations) it actually allows for a better separation of concerns.  
+A standard name for this file is `applicationContext.xml`. By default, Spring will look for a file with this name, without any extra configuration. Even though this modality to configure Spring beans is not popular anymore (now people prefer Java configuration and annotations) it actually allows for a better separation of concerns.  
+
+The xml schema definition, or namespaces, we normally include at the top of the `applicationContext.xml` file, allows for contextualized help content while we type-in and define beans in this file.
+
 
 #### xml: constructor injection
 
