@@ -1004,7 +1004,7 @@ them will not be called at application shutdown.
 
 ____________________________________________
 
-## Spring Expression Language, SpEL
+## Spring Expression Language, SpEL ?
 The Spring Expression Language can be used to:
 - Manipulate an object already created? 
 - Evaluate and inject values at run time and change the behaviour of our code accordingly.
@@ -1039,4 +1039,12 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
 }
 ```
 
- 
+## Spring AOP proxies ?
+Proxies is used to inject behaviour into existing code without modifying it.
+
+## Beans profiles
+Beans profiles were introduced in Spring to help code adapt to different environments. This feature allows setting up code that gets run only in specific environments, so we can swap out configuration at run time.
+
+The `@Profile("profile_name")` annotation in a bean classes, specifies in which "profile" such bean will be available. The profile name can be anything. When we run the application, we then need to pass the profile to the JVM (VM option), for example, `-Dspring.profiles.active=dev`, for a profile called dev.
+
+We may use profiles, for example, to ensure that some code doesn't get into production.
