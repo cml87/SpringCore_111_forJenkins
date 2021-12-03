@@ -1016,6 +1016,27 @@ For example, we can inject a value to a primitive dependency of a class like
     private double seedNum;
 ```
 
+Maintainable applications use externalized configuration. In Spring, one way of achieving this is injecting properties from a properties files using SpEL. The properties file is usually placed in the resources directory.
 
+Using annotation `@PropertiesSource` in a class, we instruct Spring to read the specified properties file and load its content into the application context. Then, using the `@Value` annotation we can inject the required property into the class field:
+```java
+@Component
+@PropertySource(value = "classpath:/application/properties")
+class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
+
+    @Value("${app.database.uri}")
+    private String databaseUri;
+
+    @Override
+    public void checkSpelling(String emailMessage){
+        if (emailMessage!=null){
+            System.out.println("Advanced spelling check ...");
+            System.out.println("Spell check complete!!");
+        } else {
+            throw new RuntimeException("An exception occurred while checking the spelling.");
+        }
+    }
+}
+```
 
  
