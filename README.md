@@ -833,8 +833,91 @@ and destroying a bean at the time of application shutdown. The lifecycle has thr
 2. Bean usage
 3. Destruction phase: Spring destroy the beans (frees up its memory I guess).
 
-There are mainly three ways to interact with the bean lifecycle. We may need this, for 
-example, if we want to read some files and do some business logic, at the start of the application.
+In the pluralsight course "Spring Framework: Spring Fundamentals", the bean lifecycle is presented as ??:
+1. Instantiation
+2. Populate properties: properties will be read from property files or injected from other resources.
+3. Bean name setting: Spring sets the bean name and makes other resources aware of it.
+4. Bean factory setting: The bean factory ?? is made aware of the new bean just created.
+5. Pre-initialization: The bean's post processor methods are called.
+6. Initialize bean: Initialize the bean utilizing the properties just set ???
+7. initMehod call
+8. Post initialization: Other bean post processor methods are called?
+
+### The init method of a bean
+The init method will be called automatically after the constructor of the bean is called, and the dependencies have been injected. In other words, if we inject the dependency through setter, the no-args constructor will be called first, then the setter to inject the dependency will be called, and then the init method. To be able to add an init method we need the dependency:
+```xml
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+```
+An init method is declared in the bean class body annotated with `@PostConstruct`:
+```java
+    @PostConstruct
+    private void initialize(){
+        System.out.println("SpeakerServiceImpl initialize() post-constructor method call ...");
+    }
+```
+In the initialize method we may put some configuration code or logging, but we shouldn't put any connection setting to a db, like getting, opening or closing a connection. Those things should be handled by Spring, not programmatically by us. I think that, in general, we shouldn't put things that should/can be handled by Spring.
+
+### Factory bean
+The Factory bean is a Spring pattern that builds up in the Factory Method design pattern. It allows to set the obtention of our beans through a factory method. Moreover, it's very useful when we need to adapt legacy classes to behave as Spring beans (so we can easily inject them as needed) but we cannot modify them. Below follows an example.
+
+Suppose we have an old legacy class called `Calendar` that we want to inject in our code as a Spring bean. The pattern to follow is composed of three steps:
+1. Define the `CalendarFactory` Spring factory class, typed with the old legacy `Calendar` class. We'll obtain a `Calendar` object through method `getObject()` of this factory after properly setting it. For the setting of the factory, for example, we can "add days" to it with method `addDays()`, as in the example below.
+2. Define the method in the Java beans configuration class returning the calendar factory bean.
+3. Define the method in the Java beans configuration class returning the `Calendar` object as a bean.
+```java
+public class CalendarFactory implements FactoryBean<Calendar> {
+
+    private Calendar calendar = Calendar.getInstance();
+
+    @Override
+    public Calendar getObject() throws Exception {
+        return calendar;
+    }
+
+    @Override
+    public Class<?> getObjectType() {
+        return Calendar.class;
+    }
+
+    public void addDays(int n){
+        calendar.add(Calendar.DAY_OF_YEAR,n);
+    }
+
+}
+```
+```java
+@Configuration
+@ComponentScan({"com.example.conference"})
+public class AppConfig {
+
+    // Here we hard code the factory as we want it, though
+    @Bean("calendarFactory")
+    public CalendarFactory calendarFactory(){
+        CalendarFactory calendarFactory = new CalendarFactory();
+        calendarFactory.addDays(2);
+        return calendarFactory;
+    }
+
+    // We'll get this been from the Spring container, but Spring will create it through
+    // the bean factory 'calendarFactory' defined here
+    @Bean("calendar")
+    public Calendar getCalendar() throws Exception {
+        return calendarFactory().getObject();
+    }
+
+}
+```
+Attention should be paid to the fact that a bean that implements Spring's FactoryBean interface "cannot be used as a normal bean" (taken from the documentation of the FactoryBean interface).
+
+It also allows working with static methods inside a class??
+
+
+____________________________________________
+There are mainly three ways to interact with the bean lifecycle. We may need this, for example, if we want to read some files and do some business logic, at the start of the application.
 Similarly, we may need it if we want to clean some additional resources in our environment, 
 at the time of application shutdown. To achieve this we can use three types of bean lifecycle hooks:
 1. Interfaces `InitializingBean` and `DisposableBean`, the bean implements them 
@@ -919,6 +1002,19 @@ them will not be called at application shutdown.
 ### Methods `init()` and `destroy()` of the `@Bean` annotation
 ... not explained properly
 
+____________________________________________
+
+## Spring Expression Language, SpEL
+The Spring Expression Language can be used to:
+- Manipulate an object already created? 
+- Evaluate and inject values at run time and change the behaviour of our code accordingly.
+- Evaluate and manipulate configuration
+
+For example, we can inject a value to a primitive dependency of a class like
+```java
+    @Value("#{ T(java.lang.Math).random()*100 }")
+    private double seedNum;
+```
 
 
 
