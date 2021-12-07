@@ -684,7 +684,7 @@ public class User {
 ```
 In this example we are using a SpEL expression in the `@Value` annotation, but it could be a simple literal, like `@Value("Peru")`, or a property `@Value("${user.country}")`. 
 
-When we need to pass primitive values to a setter annotated with `@Autowired` the same approach is used.
+When we need to pass primitive values to a setter annotated with `@Autowired`, the same approach is used. If we don't annotate the setter with `@Autowired`, and only use `@Value` annotation, the setter will still be called to set the dependency, but in the BeanPostProcessor class. This is when the methods annotated with `@Value` are called, it seems. 
 
 #### Autowiring: setter injection
 Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
