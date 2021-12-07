@@ -80,7 +80,7 @@ Spring can also be used as a registry ?
 
 ## Tight coupling 
 Classes can have fields of reference type, for example classes. Usually we'll 
-be interested in some methods of this field class, so we'll need to make point 
+be interested in some methods of this field class, so we'll need to make point
 this reference to a proper instance. If we do this inside the constructor of 
 the class, we'll have **tight coupling**. For example:
 
@@ -539,7 +539,7 @@ a;lkjflajdflkjads;flkjlkfjlajf lkjf;lajflajf lakdsjf lkfjl
 ### Annotations (autowiring)
 When using either a xml configuration file, or a Java configuration class, we are manually specifying which are the beans we want to create and how we want to inject the dependencies a given class needs (constructor or setter injection). In other words we are _manually_ defining and wiring our beans, <u>all in a same file (xml or Java)</u>.
 
-However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_ The difference now is that these two operations will be done in separate files. Spring will use a Java or xml file to define where we want to look for beans. Spring will use then the very bean classes files to define which classes will be beans and to set the wiring (dependency injection) type.  
+However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_. The difference now is that these two operations will be done in separate files. Spring will use a Java, or xml, file to define where we want to look for beans. Spring will use then the very beans class files to define which classes will be beans and to set the wiring (dependency injection) type.  
 
 Autowiring is specially useful in big projects with many beans and dependencies among them. It is an example of _"convention over configuration"_.
 
@@ -651,11 +651,40 @@ Before this piece of information was given explicitly while wiring the beans in 
 
 When using `@Autowired` to wire, or inject, dependencies, through setter injection, the beans needed to be injected as dependencies can be defined either annotating their classes with `@Component`, or with `@Bean` annotated methods inside a Java configuration class. This would be a hybrid approach and affects code readability in my opinion.
 
-However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting, the hybrid approach didn't work for me in this case). This is the most convenient way: going with will autowiring and using the stereotype annotations to define our beans.
+However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting, the hybrid approach didn't work for me in this case). This is the most convenient way: going with autowiring and using the stereotype annotations to define our beans.
 
 #### Autowiring: constructor injection
 When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follow the same rules as for setter injection, which we discuss below.   
 All the beans needed to successfully do the dependency injection need to be defined with `@Component` (or some stereotype annotation), and there should be Java configuration class with the `@ComponentScan`.
+
+If we do constructor injection, i.e. we use the constructor of a bean to set its dependencies, and these dependencies are of <u>primitive types</u>, we need to pass values for them somehow to the constructor. In this case, other than the `@Autowire` annotation in the constructor, we use `@Value` to pass the values to the constructor parameter.
+```java
+@Component("user")
+public class User {
+
+    @Value("#{'John Doe'}")
+    private String name;
+    @Value("#{30}")
+    private String country;
+    private String language;
+
+    public User() {
+    }
+
+    @Autowired
+    public User(@Value("#{systemProperties['user.country']}") String country,
+                @Value("#{systemProperties['user.language']}") String language) {
+        this.country = country;
+        this.language = language;
+    }
+
+    // getters and setters
+    
+}
+```
+In this example we are using a SpEL expression in the `@Value` annotation, but it could be a simple literal, like `@Value("Peru")`, or a property `@Value("${user.country}")`. 
+
+When we need to pass primitive values to a setter annotated with `@Autowired` the same approach is used.
 
 #### Autowiring: setter injection
 Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
