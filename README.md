@@ -546,10 +546,11 @@ Autowiring is specially useful in big projects with many beans and dependencies 
 ### Autowiring: where are the beans?
 If we want to use a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package(s) where the classes we want to make beans are:
 ```java
-@ComponentScan({"com.example"})
+@ComponentScan("com.example")
     public class AppConfig {
 }
 ```
+To pass several base packages to scan for beans we list them as `@ComponentScan({"com.example",com.plumbe})`.
 If instead we want to do the same through a xml file, we should set it as:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
