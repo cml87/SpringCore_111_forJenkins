@@ -1051,7 +1051,7 @@ Maintainable applications use externalized configuration. In Spring, one way of 
 Using annotation `@PropertiesSource` in a class, we instruct Spring to read the specified properties file and load its content into the application context. Then, using the `@Value` annotation we can inject the required property into the class field:
 ```java
 @Component
-@PropertySource(value = "classpath:/application/properties")
+@PropertySource(value = "classpath:/application.properties")
 class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
 
     @Value("${app.database.uri}")
