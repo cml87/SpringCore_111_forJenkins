@@ -4,7 +4,18 @@ In this project I will follow the 52 minutes video
 at https://www.youtube.com/watch?v=ZwcHeLhvuq4
 It is a general introduction to Spring Core, which seems good to me.
 
-Enriched with content from course <span style="color:aquamarine">Spring Framework: Spring Fundamentals</span>, by Bryan Hansen **pluralsight**
+Enriched with content from the course:
+- <span style="color:aquamarine">Spring Framework: Spring Fundamentals</span>, by Bryan Hansen **pluralsight**
+- <span style="color:aquamarine">Mastering Spring Framework Fundamentals</span>, by Matthew Speak. O'Reilly. **pluralsight**
+
+## Spring online resources
+Spring Framework documentation:
+1. https://docs.spring.io/spring-framework/docs/current/reference/html/ or https://docs.spring.io/spring-framework/docs for the documentation of all the versions.  
+2. Java doc api for each version, for example, for 4.0.0.M2 https://docs.spring.io/spring-framework/docs/4.0.0.M2/
+3. Spring guides https://spring.io/guides. Guides by topic areas.
+
+The documentation for Spring 5 onwards has been nicely split into different technologies stack. See for example, we can read the "core" part of Spring only at https://docs.spring.io/spring-framework/docs/5.3.7/reference/html/.
+
 
 ## Spring Core general
 Spring was developed to make enterprise Java development (already existing tasks) easier, as an improvement over EJBs. It holds to many best practices and well known design patterns. It allows us to actually write better Java code, because it allows for loosely coupled classes and more testable code. It makes our application configurable, instead of using hard coded settings.
@@ -178,19 +189,80 @@ Fig. min 5:24
 
 ## Spring
 
-Spring allows for automatic Dependency Injection (or **_Inversion of Control_**, IoC).
-This was, in fact, the initial purpose of the Spring framework. Spring creates the 
-Java objects, or Spring beans, and injects them at runtime.
+Spring allows for automatic Dependency Injection (or **_Inversion of Control_**, IoC). This was, in fact, the initial purpose of the Spring framework. Spring creates the Java objects, or Spring beans, and injects them at runtime.
 
 Fig. min 5:49
 
-The Spring framework is distributed through jars. Springs wants yuo to use Maven or Gradle, to download its jars, instead of doing it manually. This is because normally 
-Spring jars will depend on other jars and Maven will take care of downloading 
-those other jars as well. In other words, Spring dependencies have dependencies 
-themselves, and Maven is a dependency management tool. These other dependencies 
-are called transitive dependencies. For example, when in 
-the pom we ask for dependency 
+## pom.xml setting and the bom 
+A nice way to download Spring dependencies is at https://search.maven.org/. Go there an in the search dialog box type "org.springframework:". The different **modules** of the Spring framework will appear. The module that brings Spring into our project is "spring-context". This is the top level dependency of the Spring Framework.
 
+A startup pom for a spring project can be:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>conference</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>Spring-core-1</name>
+    <description>course Spring Framework Fundamentals</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <!--        <java.version>1.8</java.version>-->
+    </properties>
+
+        
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>5.2.19.RELEASE</version>  <!--all other dependencies of the project will have this version -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>javax.annotation</groupId>-->
+        <!--            <artifactId>javax.annotation-api</artifactId>-->
+        <!--        </dependency>-->
+    </dependencies>
+
+
+    <build>
+        <plugins>
+            <!--this must always be specified, otherwise Intellij will use its Java 5 compiler-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+<!--                <configuration>-->
+<!--                    <source>${java.version}</source>-->
+<!--                    <target>${java.version}</target>-->
+<!--                </configuration>-->
+            </plugin>
+
+        </plugins>
+    </build>
+</project>
+```
+
+
+The Spring framework is distributed through jars. Springs wants yuo to use Maven or Gradle, to download its jars, instead of doing it manually. This is because normally Spring jars will depend on other jars and Maven will take care of downloading those other jars as well. In other words, Spring dependencies have dependencies themselves, and Maven is a dependency management tool. These other dependencies are called transitive dependencies. For example, when in the pom we ask for dependency:
 ```xml
     <dependencies>
         <dependency>
@@ -210,8 +282,16 @@ and we run `mvn:dependency:tree` we get
 [INFO]    |  \- org.springframework:spring-jcl:jar:5.2.0.RELEASE:compile
 [INFO]    \- org.springframework:spring-expression:jar:5.2.0.RELEASE:compile
 ```
-ie. Maven has downloaded other 5 needed transitive dependencies. Dependency 'a' 
-needed by dependency 'b' appears below it and indented.
+ie. Maven has downloaded other 5 needed transitive dependencies. Dependency 'a' needed by dependency 'b' appears below it and indented.
+
+There are some best practices with regard to the pom setting of a spring project. One is to explicitly specify the version of the `maven-compiler-plugin`, as we made above. Another one is to use a bom, or "built of materials". 
+
+The bom is a dependency that defines the version of the dependencies of a project. It unifies the version of all the dependencies in a prokect and ensure no conflicting dependencies, or transit dependencies, are used. One we include it, we no longer need to specify a version for our dependencies. Spring Boot and Spring Cloud use this approach. It is another Spring best practice. Notice that the Maven plugin versions still need to be specified.
+
+The pom file above uses some `properties`. There are some special named properties that Maven understands, such as `project.build.sourceEncoding`, `maven.compiler.source` and `maven.compiler.target`. The two Maven compiler properties specify the Java source code and JRE version (I think), for the Maven compiler plugin, respectively. If we use them, we don't need to do such `<configuration>` in the `maven-compiler-pluging`. 
+
+
+## Spring beans
 
 Spring creates objects and inject them into our application at runtime. This functionality is provided by the Sprint **IoC Container**, which create objects, inject the needed dependencies into them, and manage their lifecycle.
 
