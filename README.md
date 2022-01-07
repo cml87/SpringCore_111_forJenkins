@@ -212,12 +212,10 @@ A startup pom for a spring project can be:
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <!--        <java.version>1.8</java.version>-->
     </properties>
-
         
     <dependencyManagement>
         <dependencies>
@@ -287,6 +285,8 @@ ie. Maven has downloaded other 5 needed transitive dependencies. Dependency 'a' 
 There are some best practices with regard to the pom setting of a spring project. One is to explicitly specify the version of the `maven-compiler-plugin`, as we made above. Another one is to use a bom, or "built of materials". 
 
 The bom is a dependency that defines the version of the dependencies of a project. It unifies the version of all the dependencies in a prokect and ensure no conflicting dependencies, or transit dependencies, are used. One we include it, we no longer need to specify a version for our dependencies. Spring Boot and Spring Cloud use this approach. It is another Spring best practice. Notice that the Maven plugin versions still need to be specified.
+
+Notice also that the bom will only specify versions the dependencies from the 'groupId' org.springframework. Other dependencies will still need version specification.
 
 The pom file above uses some `properties`. There are some special named properties that Maven understands, such as `project.build.sourceEncoding`, `maven.compiler.source` and `maven.compiler.target`. The two Maven compiler properties specify the Java source code and JRE version (I think), for the Maven compiler plugin, respectively. If we use them, we don't need to do such `<configuration>` in the `maven-compiler-pluging`. 
 

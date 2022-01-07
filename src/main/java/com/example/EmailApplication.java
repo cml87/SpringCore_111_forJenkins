@@ -16,6 +16,7 @@ public class EmailApplication {
         System.out.println("***... beans usage ...***");
         System.out.println("*************************");
 
+
         ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook();
 
     }
