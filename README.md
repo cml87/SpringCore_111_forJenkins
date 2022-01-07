@@ -20,11 +20,16 @@ The documentation for Spring 5 onwards has been nicely split into different tech
 ## Spring Core general
 Spring was developed to make enterprise Java development (already existing tasks) easier, as an improvement over EJBs. It holds to many best practices and well known design patterns. It allows us to actually write better Java code, because it allows for loosely coupled classes and more testable code. It makes our application configurable, instead of using hard coded settings.
 
-Spring started out just and IoC (**Inversion of Control**) container, a technique also called dependency injection. It was conceived to reduce or replace some of the complex configuration in early Java EE applications. **_Later_**, Spring started to build around building enterprise applications without EJBs. They initially were just figuring out how to work better with EJBs, but then discovered that EJBs were actually not needed for a lot of situations.
+### Dependency injection and IoC (Inversion of Control)
+<u>Dependency injection</u> is when we set ("inject") the fields ("dependencies") of a class from outside its body, through constructors or setters that some client code will call, for example. 
 
-Dependency injection is removing hard coded wiring in our app. and using a framework to inject dependencies and resources where they are needed.
+<u>Inversion of Control (IoC)</u> is when the execution flow of an application is not under the "control" the code it runs, but under the control of a framework the application uses. When we use a framework like Spring, we have no control over when the framework methods will be called (for example those that initialize and destroy the beans). We can only control what they do. In fact this is a <u>distinguishing treat between a framework and a library</u>. A library does not deprive the application of the execution flow control; it's just a set of function, or methods, we call and that return to the calling point in the code once finished. 
 
-Spring can essentially be used with or without EJBs, but nowadays, it is primarily used without them. No needs of EJBs means no need of an application server, such as Wildfly. So Spring allows developing enterprise applications without an application server. Spring only need a web server, and by defaults uses Tomcat (easy to use and lightweight). Before Spring it was not easy to have enterprise features in an application deployed in Tomcat.
+Among the many thing a framework that does IoC can do, there is objects ("beans") creation, and dependency injection, or wieing. The framework will provide many possibilities for how these two things can be done. See https://stackoverflow.com/questions/6550700/inversion-of-control-vs-dependency-injection.
+
+Spring started out just as an IoC framework that did dependency injection. It was conceived to reduce or replace some of the complex configurations in early Java EE applications. **_Later_**, Spring started to evolve around building enterprise applications without EJBs. They initially were just figuring out how to work better with EJBs, but then discovered that EJBs were actually not needed for a lot of situations.
+
+Spring can essentially be used with or without EJBs, but nowadays, it is primarily used without them. No needs of EJBs means no need of an application server, such as Wildfly. So Spring allows developing enterprise applications without an application server. Spring only needs a web server, and by default uses Tomcat (easy to use and lightweight). Before Spring, it was not easy to have enterprise features in an application deployed in Tomcat.
 
 <u>Spring is completely POJO based and interface driven</u>. Springs uses AOP and Proxies to apply things as transactions to our code to get those 'cross-cutting concerns' ? out of our code, producing smaller and lightweight applications.
 
@@ -37,7 +42,6 @@ Spring is built around best practices. It uses well known Design Patterns such a
 4. Helps with decoupling and caching
 5. Helps in reducing code complexity
 6. Helps in focusing in the business logic by removing boilerplate configuration code.
-
 
 Spring allows reducing this
 ```java
@@ -87,7 +91,6 @@ Spring allow three types of configuration:
 In Spring, the **Application Context** is the configured Spring IoC container with all our dependencies wired up in it. It is _mainly_ a hashmap of objects.
 
 Spring can also be used as a registry ?
-
 
 ## Tight coupling 
 Classes can have fields of reference type, for example classes. Usually we'll 
@@ -290,10 +293,11 @@ Notice also that the bom will only specify versions the dependencies from the 'g
 
 The pom file above uses some `properties`. There are some special named properties that Maven understands, such as `project.build.sourceEncoding`, `maven.compiler.source` and `maven.compiler.target`. The two Maven compiler properties specify the Java source code and JRE version (I think), for the Maven compiler plugin, respectively. If we use them, we don't need to do such `<configuration>` in the `maven-compiler-pluging`. 
 
-
 ## Spring beans
 
 Spring creates objects and inject them into our application at runtime. This functionality is provided by the Sprint **IoC Container**, which create objects, inject the needed dependencies into them, and manage their lifecycle.
+
+In Spring, the **Application Context** is the configured Spring IoC container with all our dependencies wired up in it. It is _mainly_ a hashmap of objects.
 
 There are three ways to define and configure our bean in Spring:
 1. through xml configuration file
@@ -318,6 +322,10 @@ fig 13.14
 
 To use the IoC Container Spring provide us with two <u>interfaces</u>, `BeanFactory` 
 and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is the recommended way to go. We'll normally  obtain our beans from an object implementing the `ApplicationContext` interface. The kind of object we'll exactly use will depend on how we decide to configure our beans. For example, if we configure our beans through a xml file, we'll use class `ClassPathXmlApplicationContext`, as shown below.
+
+The other classes implementing interface `ApplicationContext` and normally used in Spring projects are `FileSystemXmlApplicationContext` and `AnnotationConfigApplicationContext`. See hierarchy with ^H in IntelliJ !
+
+There are many interfaces that interface `ApplicationContext` extends. Spring has split different functionalities (methods) in these interfaces. Study each one to know all what can be done in a Spring application with the Spring context.
 
 ### xml configuration
 
@@ -347,8 +355,7 @@ Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationCont
 
 A standard name for this file is `applicationContext.xml`. By default, Spring will look for a file with this name, without any extra configuration. Even though this modality to configure Spring beans is not popular anymore (now people prefer Java configuration and annotations) it actually allows for a better separation of concerns.  
 
-The xml schema definition, or namespaces, we normally include at the top of the `applicationContext.xml` file, allows for contextualized help content while we type-in and define beans in this file.
-
+The xml schema definition, or namespaces, we normally include at the top of the `applicationContext.xml` file, allows for contextualized help content and autocomplete, while we type-in and define beans in this file.
 
 #### xml: constructor injection
 
@@ -400,12 +407,19 @@ public class EmailApplication {
     }
 }
 ```
+
+Notice that `ClassPathXmlApplicationContext` has several overloaded constructors, suitable for different needs. For example, we could pass it several bean definition xml files, defining the bean used by the different layers of our enterprise application. Press ^P to see all the overloaded version of the constructor (or method).
+
+Class `ClassPathXmlApplicationContext` would look the passed xml bean definition file from where the application is lunch (from where we call the launcher `java` of our JDK).
+
 It seems that when we do constructor injection we don't need to include a default 
 constructor in the parent class (`EmailClient` in the example above).
 
 The **Application Context** is Spring "container" of configured and managed beans. In other words, it is the set of Spring beans autowired.
 
 It seems that when we initialize an application context, an instance of each bean is created, even if we have not yet asked for any bean to the container. I discovered this using bean lifecycle hooks (interface `InitializingBean`, see below).
+
+The `getBean()` methods are in interface `BeanFactory`, which is in the hierarchy `ApplicationContext` <- `ListableBeanFactory` <- `BeanFactory`. Do ^F12 on it to see its methods, and see all the overloaded versions of method `getBean()`. 
 
 #### xml: setter injection
 Setter injection with a xml configuration is performed as:
@@ -932,8 +946,15 @@ public class AppConfig {
 }
 ```
 
+In xml configuration we specify the scope of a bean with the `scope` property of the `<bean>` element. For example:
+```xml
+<bean id="myService" class="com.example.MyService" scope="prototype" />
+```
+ 
 ### Singleton scope
-If a bean has Singleton scope, there will be only one instance per Spring container or application context, not exactly one instance per JVM. We may have more than one Spring container in our JVM.
+If a bean has Singleton scope, there will be only one instance per Spring container or application context, not exactly one instance per JVM. We may have more than one Spring container in our JVM. 
+
+We may check singletons easily looking at the memory address representation of our beans, when debugging our application in IntelliJ. Debug with Shift+F9. F8 for forward, F9 to finish. We'll see something like `AdvancedSpellChecker@1628` for all singleton beans, ie. they will point to the same object in memory. If instead the beans has prototype scope, we'll observe different memory addresses being used. 
 
 ## Bean lifecycle
 The bean lifecycle is a set of steps Spring performs for creating, using, 
@@ -1153,6 +1174,10 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
 Proxies is used to inject behaviour into existing code without modifying it.
 
 ## Beans profiles
+An environment is a collection of properties and profiles. Interface `ApplicationContext` extends interface `EnvironmentCapable` which has method a method returning an `Environment`. 
+
+A profile is an environment specific configuration.
+
 Beans profiles were introduced in Spring to help code adapt to different environments. This feature allows setting up code that gets run only in specific environments, so we can swap out configuration at run time.
 
 The `@Profile("profile_name")` annotation in a bean classes, specifies in which "profile" such bean will be available. The profile name can be anything. When we run the application, we then need to pass the profile to the JVM (VM option), for example, `-Dspring.profiles.active=dev`, for a profile called dev.

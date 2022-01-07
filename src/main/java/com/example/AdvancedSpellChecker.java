@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
-class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
+class  AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
     @Override
     public void checkSpelling(String emailMessage){
         if (emailMessage!=null){
