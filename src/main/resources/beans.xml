@@ -4,15 +4,15 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="emailClient" class="com.example.EmailClient">
+    <bean id="emailClient" class="com.example.programmingtechie.EmailClient">
 <!--       <constructor-arg ref="basicSpellChecker"/>-->
            <property name="spellChecker" ref="basicSpellChecker"/>
         </bean>
 
-        <bean id="basicSpellChecker" class="com.example.BasicSpellChecker">
+        <bean id="basicSpellChecker" class="com.example.programmingtechie.BasicSpellChecker">
         </bean>
 
-        <bean id="advancedSpellChecker" class="com.example.AdvancedSpellChecker">
+        <bean id="advancedSpellChecker" class="com.example.programmingtechie.AdvancedSpellChecker">
         </bean>
         <!-- more bean definitions go here -->
 

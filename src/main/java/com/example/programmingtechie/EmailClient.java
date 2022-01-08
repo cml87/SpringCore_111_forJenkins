@@ -1,5 +1,6 @@
-package com.example;
+package com.example.programmingtechie;
 
+import com.example.programmingtechie.SpellChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
