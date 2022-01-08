@@ -15,7 +15,13 @@ Spring Framework documentation:
 3. Spring guides https://spring.io/guides. Guides by topic areas.
 
 The documentation for Spring 5 onwards has been nicely split into different technologies stack. See for example, we can read the "core" part of Spring only at https://docs.spring.io/spring-framework/docs/5.3.7/reference/html/.
+ 
+##  Layers in enterprise Java applications
+- Business logic: service classes, service layer
+- Data access logic: repository classes, persistence layer
+- Handling HTTP request: controller classes, presentation layer
 
+Normally, controllers will talk to service classes, and service classes will talk to repository classes. That's the convention, the layering enterprise apps go for. Beans can be shared though. For example, a same repository class can be used by many service classes.
 
 ## Spring Core general
 Spring was developed to make enterprise Java development (already existing tasks) easier, as an improvement over EJBs. It holds to many best practices and well known design patterns. It allows us to actually write better Java code, because it allows for loosely coupled classes and more testable code. It makes our application configurable, instead of using hard coded settings.
@@ -25,7 +31,7 @@ Spring was developed to make enterprise Java development (already existing tasks
 
 <u>Inversion of Control (IoC)</u> is when the execution flow of an application is not under the "control" the code it runs, but under the control of a framework the application uses. When we use a framework like Spring, we have no control over when the framework methods will be called (for example those that initialize and destroy the beans). We can only control what they do. In fact this is a <u>distinguishing treat between a framework and a library</u>. A library does not deprive the application of the execution flow control; it's just a set of function, or methods, we call and that return to the calling point in the code once finished. 
 
-Among the many thing a framework that does IoC can do, there is objects ("beans") creation, and dependency injection, or wieing. The framework will provide many possibilities for how these two things can be done. See https://stackoverflow.com/questions/6550700/inversion-of-control-vs-dependency-injection.
+Among the many thing a framework that does IoC can do, there is objects ("beans") creation, and dependency injection, or wiring. The framework will provide many possibilities for how these two things can be done. See https://stackoverflow.com/questions/6550700/inversion-of-control-vs-dependency-injection.
 
 Spring started out just as an IoC framework that did dependency injection. It was conceived to reduce or replace some of the complex configurations in early Java EE applications. **_Later_**, Spring started to evolve around building enterprise applications without EJBs. They initially were just figuring out how to work better with EJBs, but then discovered that EJBs were actually not needed for a lot of situations.
 
@@ -190,6 +196,8 @@ We _inject_ it from outside when we create the EmailClient instance. This is
 
 Fig. min 5:24
 
+Loose coupling ease testability of our code as well.
+
 ## Spring
 
 Spring allows for automatic Dependency Injection (or **_Inversion of Control_**, IoC). This was, in fact, the initial purpose of the Spring framework. Spring creates the Java objects, or Spring beans, and injects them at runtime.
@@ -295,7 +303,7 @@ The pom file above uses some `properties`. There are some special named properti
 
 ## Spring beans
 
-Spring creates objects and inject them into our application at runtime. This functionality is provided by the Sprint **IoC Container**, which create objects, inject the needed dependencies into them, and manage their lifecycle.
+Spring creates objects and inject them into our application at runtime. This functionality is provided by the Sprint **IoC Container**, which create objects, inject the needed dependencies into them, and manage their lifecycle. To create beans and set its dependencies, Spring will <u>always</u> use (call) the constructors the class has, either explicitly written by the programmer or, included by the compiler (remember, if there is no constructor at all, the compiler will add a no-args constructor to the class. But if there is one parametrized constructor, the compiler will add none). Similarly, when doing setter injection (see below) Spring will always use (call) the setters the class has. 
 
 In Spring, the **Application Context** is the configured Spring IoC container with all our dependencies wired up in it. It is _mainly_ a hashmap of objects.
 
@@ -311,8 +319,8 @@ Each of these in turns supports dependency injection through the following mecha
 
 _In general, we can have (1,1), (1,2), (2,1), (2,2) and (3,1), (3,2) and (3,3)._
 
-In the constructor injection we inject the dependencies to the class through its constructor, whereas in setter injection we do it through available setter methods.
-
+In the constructor injection we inject the dependencies to the class through its constructor, whereas in setter injection we do it through available setter methods. We should use constructor injection instead of setter injection, when we want to set dependencies without which we don't want the bean to be ever created. We can use both concurrently.
+ 
 Field injection is used only when we configure our beans through annotations. 
 
 Other than the setters, setter injection needs a default constructor (no-args) in the class where we want to inject the dependencies. The Spring IoC will call this constructor to instantiate an object of this class, and then will call the setter to set, or inject, the dependency.
@@ -338,15 +346,15 @@ Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationCont
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="emailClient" class="com.example.EmailClient">
+    <bean id="emailClient" class="com.example.programmingtechie.EmailClient">
         <constructor-arg ref="advancedSpellChecker"/>
 <!--        <property name="spellChecker" ref="basicSpellChecker"/>-->
     </bean>
 
-    <bean id="basicSpellChecker" class="com.example.BasicSpellChecker">
+    <bean id="basicSpellChecker" class="com.example.programmingtechie.BasicSpellChecker">
     </bean>
 
-    <bean id="advancedSpellChecker" class="com.example.AdvancedSpellChecker">
+    <bean id="advancedSpellChecker" class="com.example.programmingtechie.AdvancedSpellChecker">
     </bean>
     <!-- more bean definitions go here -->
 
@@ -373,10 +381,10 @@ Constructor injection is index based, which means we have to specify the index o
         https://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <bean name="speakerRepository"
-          class = "com.example.conference.repository.HibernateSpeakerRepositoryImpl"/>
+          class = "com.example.programmingtechie.conference.repository.HibernateSpeakerRepositoryImpl"/>
 
-    <bean name="speakerService" class="com.example.conference.service.SpeakerServiceImpl">
-        <!--=setter injection-->
+    <bean name="speakerService" class="com.example.programmingtechie.conference.service.SpeakerServiceImpl">
+        <!--setter injection-->
         <!--since the property name here is 'speakerRepository', the setter that will be called
          automatically to set it will be setSpeakerRepository(). This is a convention! -->
         <!--<property name="speakerRepository" ref="speakerRepository"/>-->
@@ -407,6 +415,7 @@ public class EmailApplication {
     }
 }
 ```
+Notice that nothing stops us from getting the bean `basicSpellChecker` independently, in our `main()` method using the same approach as shown above. We could do it instead of getting the bean `emailClient` that has `basicSpellChecker` as a dependency.
 
 Notice that `ClassPathXmlApplicationContext` has several overloaded constructors, suitable for different needs. For example, we could pass it several bean definition xml files, defining the bean used by the different layers of our enterprise application. Press ^P to see all the overloaded version of the constructor (or method).
 
@@ -430,27 +439,29 @@ Setter injection with a xml configuration is performed as:
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="emailClient" class="com.example.EmailClient">
+    <bean id="emailClient" class="com.example.programmingtechie.EmailClient">
 <!--       <constructor-arg ref="basicSpellChecker"/>-->
            <property name="spellChecker" ref="basicSpellChecker"/>
         </bean>
 
-        <bean id="basicSpellChecker" class="com.example.BasicSpellChecker">
+        <bean id="basicSpellChecker" class="com.example.programmingtechie.BasicSpellChecker">
         </bean>
 
-        <bean id="advancedSpellChecker" class="com.example.AdvancedSpellChecker">
+        <bean id="advancedSpellChecker" class="com.example.programmingtechie.AdvancedSpellChecker">
         </bean>
         <!-- more bean definitions go here -->
 
 </beans>
 ```
 
+Notice that the dependency `spellChecker` of bean `emailClient` is of reference type. That's why we use `ref` to specify which bean in the Spring IoC container, it should be wired to. When a dependency is of primitive type, we use `value`.
+
 #### xml: autowiring
-Yes, we can do autowiring with xml configuration as well, with no annotations.
+Yes, we can do autowiring with xml configuration as well, without annotations.
 
 Before we saw that when defining the beans in a xml file, we also define explicitly how we want to inject the dependencies in each of them. We used elements `<constructor-arg>` for the case of constructor injection, and `<property>` for the case of setter injection.
 
-However, we can instruct Spring to do a constructor or setter injection for us to wire-up the dependencies a given bean needs, as far as the bean class has the needed setters and constructor to perform the injection of its dependency. This is how we would do it:
+However, we can instruct Spring to do a constructor or setter injection for us to wire-up the dependencies a given bean needs, provided that the bean class has the needed setters and constructor to perform the injection of its dependency. This is how we would do it:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -458,19 +469,20 @@ However, we can instruct Spring to do a constructor or setter injection for us t
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean name="speakerRepository"
-          class = "com.example.conference.repository.HibernateSpeakerRepositoryImpl"/>
-
-    <bean name="speakerService" class="com.example.conference.service.SpeakerServiceImpl" autowire="constructor">
+    <bean name="speakerService" 
+          class="com.example.programmingtechie.conference.service.SpeakerServiceImpl" autowire="constructor">
     </bean>
 
+    <bean name="speakerRepository"
+          class = "com.example.programmingtechie.conference.repository.HibernateSpeakerRepositoryImpl"/>
+    
 </beans>
 ```
 Here Spring will call the constructor of the `SpeakerServiceImpl` class to set the dependency `speakerRepository` this class has, passing as argument the bean `speakerRepository`, which is the only bean assignment compatible available.
 
 Autowire using the setter would need instead the autowire parameter as `autowire="byType"` or `autowire="byName"`. 
 
-In both these cases the setter named ("camelcased") after the dependency type (not its name!) we want to inject will be called.
+In both these cases, it will be called the setter named ("camelcased") after the dependency type (not its name!) we want to inject.
 
 The difference is in how we tell Spring to pick up the bean to be injected. 
 
@@ -506,6 +518,27 @@ public class SpeakerServiceImpl implements SpeakerService {
 ```
 
 Wiring errors will cause <u>runtime</u> exceptions!
+
+#### xml: component scanning
+Component scanning through xml requires these additional name spaces and schema definition in the bean definition xml file:
+```xml
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+```
+An example of a full applicationContext.xml file using component scanning could be:
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+        <context:component-scan base-package="com.example.matthew"/>
+
+</beans>
+```
+Notice that still the classes we want Spring to discover as beans will need to be annotated with `@Component`. Similarly, the dependencies we want Spring to inject will need to be annotated with `@Autowired`. These two annotations are explained below.
 
 #### xml: field injection
 afdafadsflkj lfjlkj lkfj;laksj
@@ -630,7 +663,7 @@ a;lkjflajdflkjads;flkjlkfjlajf lkjf;lajflajf lakdsjf lkfjl
 
 
 
-### Annotations (autowiring)
+### Annotations and autowiring
 When using either a xml configuration file, or a Java configuration class, we are manually specifying which are the beans we want to create and how we want to inject the dependencies a given class needs (constructor or setter injection). In other words we are _manually_ defining and wiring our beans, <u>all in a same file (xml or Java)</u>.
 
 However, Spring can do the beans definition and wiring for us: Spring can do _**autowiring**_. The difference now is that these two operations will be done in separate files. Spring will use a Java, or xml, file to define where we want to look for beans. Spring will use then the very beans class files to define which classes will be beans and to set the wiring (dependency injection) type.  
@@ -638,14 +671,17 @@ However, Spring can do the beans definition and wiring for us: Spring can do _**
 Autowiring is specially useful in big projects with many beans and dependencies among them. It is an example of _"convention over configuration"_.
 
 ### Autowiring: where are the beans?
-If we want to use a Java class to define where we want Spring to look for beans, it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package(s) where the classes we want to make beans are:
+The process of beans discovery, when configuring our beans through annotations, is called _Component Scanning_. Classes we want to be discovered in the component scan need to be annotated with `@Component` though.
+
+If we want to use a Java class to define where we want Spring to look for beans (do the components scanning), it's enough to define a Java configuration class with empty body, and annotate it with `@ComponentScan`. We then pass to this annotation the base package(s) where the classes we want to make beans are:
 ```java
 @ComponentScan("com.example")
     public class AppConfig {
 }
 ```
 To pass several base packages to scan for beans we list them as `@ComponentScan({"com.example",com.plumbe})`.
-If instead we want to do the same through a xml file, we should set it as:
+
+If instead we want to do component scanning through xml, we should set the applicationContext.xml as:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -657,7 +693,7 @@ https://www.springframework.org/schema/beans/spring-beans.xsd">
             
 </beans>
 ```
-The process of beans discovery, when configuring our beans through annotations, is called _Component Scanning_. Classes we want to be discovered in the component scan need to be annotated with `@Component` though.
+
 
 ### Autowiring: which are the bean classes and how to do the wiring 
 The beans to be autowired can be defined either through `@Component` annotated classes, as we just saw, but can also be defined through `@Bean` annotated methods in a Java configuration class. For example, the bean `speakerRepository` is defined in the Java configuration file below, and is injected through setter in the class `SpeakerServiceImpl`:
@@ -898,7 +934,7 @@ Field injection is the easiest to use, as it requires less code. However, it is 
 Spring recommends setter injection.
 
 ## Stereotype annotations
-Bean classes can be marked through any of the so called _stereotype annotations_ are:
+Classes we want Spring to discover as beans can be marked with any of the so called _stereotype annotations_:
 - `@Component`: Used for general purpose beans.
 - `@Repository`: Used to denote classes used as repository objects.
 - `@Service`: Used for business logic beans. It doesn't mean a web service or a microservice. 
@@ -948,7 +984,7 @@ public class AppConfig {
 
 In xml configuration we specify the scope of a bean with the `scope` property of the `<bean>` element. For example:
 ```xml
-<bean id="myService" class="com.example.MyService" scope="prototype" />
+<bean id="myService" class="com.example.programmingtechie.MyService" scope="prototype" />
 ```
  
 ### Singleton scope
@@ -1022,7 +1058,7 @@ public class CalendarFactory implements FactoryBean<Calendar> {
 ```
 ```java
 @Configuration
-@ComponentScan({"com.example.conference"})
+@ComponentScan({"com.example.programmingtechie.conference"})
 public class AppConfig {
 
     // Here we hard code the factory as we want it, though
