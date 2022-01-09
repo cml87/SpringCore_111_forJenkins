@@ -329,16 +329,18 @@ Other than the setters, setter injection needs a default constructor (no-args) i
 fig 13.14
 
 To use the IoC Container Spring provide us with two <u>interfaces</u>, `BeanFactory` 
-and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is the recommended way to go. We'll normally  obtain our beans from an object implementing the `ApplicationContext` interface. The kind of object we'll exactly use will depend on how we decide to configure our beans. For example, if we configure our beans through a xml file, we'll use class `ClassPathXmlApplicationContext`, as shown below.
+and `ApplicationContext`. `ApplicationContext` actually extends `BeanFactory` and is the recommended way to go. We'll normally  obtain our beans from one of three objects implementing the `ApplicationContext` interface, and there are three of them. In other words, there are three application contexts types with which the Spring IoC container can be normally instantiated in Spring projects:
 
-The other classes implementing interface `ApplicationContext` and normally used in Spring projects are `FileSystemXmlApplicationContext` and `AnnotationConfigApplicationContext`. See hierarchy with ^H in IntelliJ !
+1. `ClassPathXmlApplicationContext` : Used to configure the beans through a xml file in the class path (src/main/resources).
+2. `FileSystemXmlApplicationContext` : Used to configure the beans through a xml file in the file system (dir containing the src/ dir).
+3. `AnnotationConfigApplicationContext`: Used to configure the beans through properly annotated classes. See below. 
 
-There are many interfaces that interface `ApplicationContext` extends. Spring has split different functionalities (methods) in these interfaces. Study each one to know all what can be done in a Spring application with the Spring context.
+
+There are many interfaces that interface `ApplicationContext` extends. See the hierarchy with ^H in IntelliJ! The Spring Framework splits different functionalities (methods) through these interfaces. Study each one to know all what can be done in a Spring application with the Spring context.
 
 ### xml configuration
 
-Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationContext`; we use this class to access the IoC container. One constructor of this class receives the path to the xml file containing information about our objects and how we want to wire them. This file is normally `src/main/resources/bean.xml`, and an example of its content is:
-
+As mentioned, many classes implement the `ApplicationContext` interface allowing us to access the IoC container through them. One is `ClassPathXmlApplicationContext`. One constructor of this class receives the path to the xml file containing information about our objects and how we want to wire them. This file is normally at `src/main/resources/`, and named `applicationContext.xml`, but it can be named anything, such as `beans.xml` for example. An example of its content is:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -361,9 +363,9 @@ Many classes implement `ApplicationContext`. One is `ClassPathXmlApplicationCont
 </beans>
 ```
 
-A standard name for this file is `applicationContext.xml`. By default, Spring will look for a file with this name, without any extra configuration. Even though this modality to configure Spring beans is not popular anymore (now people prefer Java configuration and annotations) it actually allows for a better separation of concerns.  
+A standard name for this file is `applicationContext.xml`. By default, Spring will look for a file with this name, without any extra configuration. Even though this modality to configure Spring beans is not popular anymore (now people prefer Java configuration and annotations) it does allow for a better separation of concerns.  
 
-The xml schema definition, or namespaces, we normally include at the top of the `applicationContext.xml` file, allows for contextualized help content and autocomplete, while we type-in and define beans in this file.
+The xml schema definition, or namespaces, we normally include at the top of the `applicationContext.xml` file, allows for contextualized help content and autocomplete, while we type-in and define beans in this file. I still don't understand this though.
 
 #### xml: constructor injection
 
@@ -785,10 +787,9 @@ When using `@Autowired` to wire, or inject, dependencies, through setter injecti
 However, if we want to inject through constructor, we should annotate all our beans with `@Component` and leave the configuration class empty and only annotated with `@ComponentScan` (this is what I discovered experimenting, the hybrid approach didn't work for me in this case). This is the most convenient way: going with autowiring and using the stereotype annotations to define our beans.
 
 #### Autowiring: constructor injection
-When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follow the same rules as for setter injection, which we discuss below.   
-All the beans needed to successfully do the dependency injection need to be defined with `@Component` (or some stereotype annotation), and there should be Java configuration class with the `@ComponentScan`.
+When we want to do autowire by constructor we annotate the constructor with `@Autowired`. Then the types of wiring we can do (type, name etc.) follows the same rules as for setter injection, which we discuss below. Spring will call the constructor passing in for the parameters the assignment compatible beans it finds in the IoC container. Candidate beans for the parameters need to be annotated with `@Component` (or some stereotype annotation), and there should be a Java configuration class with the `@ComponentScan` to do the component scan (or do it through xml).
 
-If we do constructor injection, i.e. we use the constructor of a bean to set its dependencies, and these dependencies are of <u>primitive types</u>, we need to pass values for them somehow to the constructor. In this case, other than the `@Autowire` annotation in the constructor, we use `@Value` to pass the values to the constructor parameter.
+If we do constructor injection, i.e. we use the constructor of a bean to set its dependencies, and these dependencies are of <u>primitive types</u>, we need to pass values for them somehow to the constructor. In this case, other than the `@Autowired` annotation in the constructor, we use `@Value` to pass the values to the constructor parameter.
 ```java
 @Component("user")
 public class User {
@@ -818,9 +819,9 @@ In this example we are using a SpEL expression in the `@Value` annotation, but i
 When we need to pass primitive values to a setter annotated with `@Autowired`, the same approach is used. If we don't annotate the setter with `@Autowired`, and only use `@Value` annotation, the setter will still be called to set the dependency, but in the BeanPostProcessor class. This is when the methods annotated with `@Value` are called, it seems. 
 
 #### Autowiring: setter injection
-Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
+Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This is how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
 
-In **_autowire by type_** we specify a precise class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be:
+In **_autowire by type_** we specify a precise class (not interface) as parameter to the setter, when we want to do setter injection. Our `EmailClient` class would be in this case:
 
 ```java
 @Component("emailClient")
@@ -876,8 +877,7 @@ class EmailClient {
     }
 }
 ```
-**_Autowire with the @Primary_** annotation works by selecting the bean annotated as such, whenever Spring needs to inject one of many assignment compatible beans in one (interface) dependency. For example, if we want to always inject an `AdvancedSpellChecker` 
-bean in the `SpellChecker` dependency of the `EmailClient` class, it would be enough to annotate class `AdvancedSpellChecker` with `@Primary`, and leave the setter in `EmailClient` in its polymorphic (interface) form:
+**_Autowire with the @Primary_** annotation works by selecting the bean annotated as such, whenever Spring needs to inject one of many assignment compatible beans in one (interface) dependency. For example, if we want to always inject an `AdvancedSpellChecker` bean in the `SpellChecker` dependency of the `EmailClient` class, it would be enough to annotate class `AdvancedSpellChecker` with `@Primary`, and leave the setter in `EmailClient` in its polymorphic (interface) form:
 
 ```java
     //...
@@ -940,7 +940,11 @@ Classes we want Spring to discover as beans can be marked with any of the so cal
 - `@Service`: Used for business logic beans. It doesn't mean a web service or a microservice. 
 - `@Controller`: used in Spring MVC
 
-We can use filters to look for specific types of annotations. We can pass as argument the name we want for the bean that will be created with these annotations, eg `@Service("speakerService")`.
+`@Component` is the most generic way to mark a Spring bean. The stereotype annotations are more specific and denote a given role in an enterprise application. 
+
+As for `@Component`, we can pass as argument the name we want for the bean that will be created with these annotations, eg `@Service("speakerService")`.
+
+Stereotype annotations are useful because we can use filters to look for classes annotated with any of them. ?
 
 
 ## Bean scope
