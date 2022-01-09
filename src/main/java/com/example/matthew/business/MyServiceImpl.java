@@ -1,5 +1,6 @@
 package com.example.matthew;
 
+import com.example.matthew.data.MyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
