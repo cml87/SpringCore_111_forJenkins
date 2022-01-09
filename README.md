@@ -857,6 +857,30 @@ class EmailClient {
     }
 }
 ```
+
+Another example of autowire by type happens when our beans implement a common interface, and we have configured them with an empty, but `@ComponentScan` annotated configuration class, using also stereotype annotations to mark the bean classes in the scanned packages. In this case, if we call `ctx.getBean()` passing just the interface implemented, Spring will not know which bean to pick up and will give us an error. For example:
+```java
+import com.example.programmingtechie.SpellChecker;
+
+public class EmailApplication {
+    public static void main(String[] args) {
+
+        //ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        // this will give an error as there are two concrete classes implementing interface SpellChecker:
+        // BasicSpellChecker and AdvancedSpellChecker
+        //SpellChecker spellChecker = applicationContext.getBean(SpellChecker.class); 
+                
+        // this is autowire by type: we are asking for a specific type implementing interface SpellChecker
+        SpellChecker spellChecker1 = applicationContext.getBean(BasicSpellChecker.class);
+        SpellChecker spellChecker2 = applicationContext.getBean(AdvancedSpellChecker.class);
+        
+    }
+}
+```
+Below we'll see how to use the `@Primary` annotation which allow us to specify which assignment compatible bean we want to pick up whenever there is ambiguity because of interfaces. This will be useful also in the cases where, instead of asking for a bean to the Spring container, we need to inject a bean into an interface type dependency (field) of another bean.
+
 **_Autowire by name_** is more subtle, and I don't like it. 
 With this approach, we can still use the interface reference type in the setter, as Spring will use the name of the parameter to decide which of the assignment compatible beans to wire up. Suppose we want to wire a `BasicSpellChecker` with this approach, the class `EmailClient` will then be:
 ```java
@@ -1195,12 +1219,14 @@ For example, we can inject a value to a primitive dependency of a class like
     private double seedNum;
 ```
 
-Maintainable applications use externalized configuration. In Spring, one way of achieving this is injecting properties from a properties files using SpEL. The properties file is usually placed in the resources directory.
+Maintainable applications use externalized configuration. In Spring, one way of achieving this is injecting properties from a properties files using SpEL.
+
+The properties file is normally placed at `src/main/resources/`, and named `application.properties`. This file (actually all what is inside `src/main/resources`)  will be copied into the directory `<project_name>/target/classes`, which will be included in the classpath passed to the Java launcher (`java ... -classpath ...:...:... `) when we launch the application. This is why we specify it with the annotation `@PropertySource(value = "classpath:application.properties")`, ie. we give its location relative to a path that is already in the classpath of the application, namely `<project_name>/target/classes`. If our properties file was inside `src/main/resources/dir1/`, we would pass to `PropertySource` the string `"classpath:dir1/application.properties"`.
 
 Using annotation `@PropertiesSource` in a class, we instruct Spring to read the specified properties file and load its content into the application context. Then, using the `@Value` annotation we can inject the required property into the class field:
 ```java
 @Component
-@PropertySource(value = "classpath:/application.properties")
+@PropertySource(value = "classpath:application.properties")
 class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
 
     @Value("${app.database.uri}")
@@ -1217,6 +1243,15 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
     }
 }
 ```
+
+If we are doing component scan with a `@ComponentScan` annotated configuration class, we can annotate this class with `@PropertySource("classpath:application.properties")`, so the properties in this file are available to be injected in any `@Value` annotated field of the beans discovered in the scan.
+
+There are three ways of passing properties to a Spring application:
+1. properties file
+2. VM options
+3. environment variables
+
+/usr/lib/jvm/java-1.8.0-openjdk-amd64/bin/java -javaagent:/opt/idea-IC-203.7717.56/lib/idea_rt.jar=33129:/opt/idea-IC-203.7717.56/bin -Dfile.encoding=UTF-8 -classpath /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/charsets.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/cldrdata.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/dnsns.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/icedtea-sound.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/jaccess.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/java-atk-wrapper.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/localedata.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/nashorn.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/sunec.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/sunjce_provider.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/sunpkcs11.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/zipfs.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/jce.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/jfr.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/jsse.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/management-agent.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/resources.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/rt.jar:/home/camilo/my_java_projects/SpringCore_1/target/classes:/home/camilo/.m2/repository/org/springframework/spring-context/5.2.19.RELEASE/spring-context-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-aop/5.2.19.RELEASE/spring-aop-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-beans/5.2.19.RELEASE/spring-beans-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-core/5.2.19.RELEASE/spring-core-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-jcl/5.2.19.RELEASE/spring-jcl-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-expression/5.2.19.RELEASE/spring-expression-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar com.example.matthew.App
 
 ## Spring AOP proxies ?
 Proxies is used to inject behaviour into existing code without modifying it.
