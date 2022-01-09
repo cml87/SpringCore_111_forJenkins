@@ -1,4 +1,4 @@
-package com.example.matthew;
+package com.example.matthew.data;
 
 import org.springframework.stereotype.Repository;
 

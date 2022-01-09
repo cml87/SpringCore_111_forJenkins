@@ -1,4 +1,4 @@
-package com.example.matthew;
+package com.example.matthew.business;
 
 public interface MyService {
     void doBusinessLogic();

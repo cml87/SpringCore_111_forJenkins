@@ -1,4 +1,4 @@
-package com.example.matthew;
+package com.example.matthew.business;
 
 import com.example.matthew.data.MyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
