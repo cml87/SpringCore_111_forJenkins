@@ -556,7 +556,7 @@ The configuration class can be annotated with `@Configuration` which give other 
 
 #### Java: constructor injection
 
-The example below will create our beans exactly in the same way as the previously seen `beans.xml` file. As can be seen, now the beans will be created through methods annotated with `@Bean`, which will be called automatically by Spring when the application context is started. The `@Bean` annotation can be used only at a method level.
+The example below will create our beans exactly in the same way as the previously seen `beans.xml` file. As can be seen, now the beans will be created through methods annotated with `@Bean`, which will be called automatically by Spring when the application context is started. These will be beans "factory methods". The `@Bean` annotation can be used only at a method level.
 
 ```java
 //@Configuration ??
@@ -596,12 +596,14 @@ public class EmailApplication {
 }
 ```
 
+The `@Bean` annotated factory methods can have any name. Spring will look at their return type to decide which one to invoke when we ask for a bean of a given type with method `ApplicationContext.getBean()`.  
+
 Class `AnnotationConfigApplicationContext` has three overloaded constructors. In one of them, we can pass the base package where our beans are. Provided the bean classes are properly annotated with `@Component` and `@Autowired`, Spring will then initialize our beans and wire up them automatically. This is a way of performing something called _component scanning_ and _autowiring_, which will be discussed below:
 ```java
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.programmingtechie");
 ```
 
-Defining and using a configuration class as we did above with `AppConfig`, give us a more explicit way to define and wire our bean, as well as for doing more complex configurations if needed, I think. This is why it's useful.
+Defining and using a configuration class as we did above with `AppConfig`, give us a more explicit way to define and wire our bean, as well as for doing more complex configurations if needed, I think, since we are doing all this _programmatically_. This is why it's useful. This class acts as a factory of beans.
 
 #### Java: setter injection
 
