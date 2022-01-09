@@ -198,6 +198,8 @@ Fig. min 5:24
 
 Loose coupling ease testability of our code as well.
 
+Java applications should always prefer abstraction, with interfaces for example, over concretion, with concrete classes, the reason being we can later change the implementations without having to change every single reference where it is used. Spring uses this approach heavily.
+
 ## Spring
 
 Spring allows for automatic Dependency Injection (or **_Inversion of Control_**, IoC). This was, in fact, the initial purpose of the Spring framework. Spring creates the Java objects, or Spring beans, and injects them at runtime.
