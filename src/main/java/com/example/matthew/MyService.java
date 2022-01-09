@@ -11,7 +11,7 @@ public class MyService {
     @Autowired
     public MyService(MyRepository repository) {
         this.repository = repository;
-    }
+     }
 
     public void doBusinessLogic() {
         System.out.println("Doing business logic!");

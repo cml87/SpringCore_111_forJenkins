@@ -552,8 +552,7 @@ Instead of xml configuration we can make the Spring IoC container to read beans 
 
 Almost everything in Spring can now be configured using Java configuration.
 
-The configuration class can be annotated with `@Configuration` which give other functionalities that I still don't understand. But this annotation will mark configuration classes that we can pass to 
-`AnnotationConfigApplicationContext` to initialize the container with the beans in all of them.
+The configuration class can be annotated with `@Configuration` which give other functionalities that I still don't understand. But this annotation will mark configuration classes that we can pass to `AnnotationConfigApplicationContext` to initialize the container with the beans in all of them.
 
 #### Java: constructor injection
 
@@ -581,9 +580,7 @@ public class AppConfig {
 
 }
 ```
-Now we need to tell the Spring IoC container to use the new Java configuration class instead of the 
-xml file. For this we use another class implementing the `ApplicationContext` interface, 
-`AnnotationConfigApplicationContext` and pass its constructor the configuration class:
+Now we need to tell the Spring IoC container to use the new Java configuration class instead of the xml file. For this we use another class implementing the `ApplicationContext` interface, `AnnotationConfigApplicationContext` and pass its constructor the configuration class:
 
 ```java
 public class EmailApplication {
@@ -598,6 +595,13 @@ public class EmailApplication {
     }
 }
 ```
+
+Class `AnnotationConfigApplicationContext` has three overloaded constructors. In one of them, we can pass the base package where our beans are. Provided the bean classes are properly annotated with `@Component` and `@Autowired`, Spring will then initialize our beans and wire up them automatically. This is a way of performing something called _component scanning_ and _autowiring_, which will be discussed below:
+```java
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.programmingtechie");
+```
+
+Defining and using a configuration class as we did above with `AppConfig`, give us a more explicit way to define and wire our bean, as well as for doing more complex configurations if needed, I think. This is why it's useful.
 
 #### Java: setter injection
 
