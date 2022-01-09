@@ -1207,7 +1207,7 @@ them will not be called at application shutdown.
 
 ____________________________________________
 
-## Spring Expression Language, SpEL ?
+## Properties and Spring Expression Language, SpEL ?
 The Spring Expression Language can be used to:
 - Manipulate an object already created? 
 - Evaluate and inject values at run time and change the behaviour of our code accordingly.
@@ -1221,7 +1221,7 @@ For example, we can inject a value to a primitive dependency of a class like
 
 Maintainable applications use externalized configuration. In Spring, one way of achieving this is injecting properties from a properties files using SpEL.
 
-The properties file is normally placed at `src/main/resources/`, and named `application.properties`. This file (actually all what is inside `src/main/resources`)  will be copied into the directory `<project_name>/target/classes`, which will be included in the classpath passed to the Java launcher (`java ... -classpath ...:...:... `) when we launch the application. This is why we specify it with the annotation `@PropertySource(value = "classpath:application.properties")`, ie. we give its location relative to a path that is already in the classpath of the application, namely `<project_name>/target/classes`. If our properties file was inside `src/main/resources/dir1/`, we would pass to `PropertySource` the string `"classpath:dir1/application.properties"`.
+The properties file is normally placed at `src/main/resources/`, and named `application.properties`. This file (actually all what is inside `src/main/resources`)  will be copied into the directory `<project_name>/target/classes`, which will be included in the classpath passed to the Java launcher (`java ... -classpath ...:...:... `) when we launch the application. This is why we specify it with the annotation `@PropertySource(value = "classpath:application.properties")`, ie. we give its location relative to a path that is already in the classpath of the application, namely `<project_name>/target/classes`. If our properties file was inside `src/main/resources/dir1/`, we would pass to `PropertySource` the string `"classpath:dir1/application.properties"`. 
 
 Using annotation `@PropertiesSource` in a class, we instruct Spring to read the specified properties file and load its content into the application context. Then, using the `@Value` annotation we can inject the required property into the class field:
 ```java
@@ -1246,12 +1246,20 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
 
 If we are doing component scan with a `@ComponentScan` annotated configuration class, we can annotate this class with `@PropertySource("classpath:application.properties")`, so the properties in this file are available to be injected in any `@Value` annotated field of the beans discovered in the scan.
 
-There are three ways of passing properties to a Spring application:
-1. properties file
-2. VM options
-3. environment variables
+## Properties overriding
 
-/usr/lib/jvm/java-1.8.0-openjdk-amd64/bin/java -javaagent:/opt/idea-IC-203.7717.56/lib/idea_rt.jar=33129:/opt/idea-IC-203.7717.56/bin -Dfile.encoding=UTF-8 -classpath /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/charsets.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/cldrdata.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/dnsns.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/icedtea-sound.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/jaccess.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/java-atk-wrapper.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/localedata.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/nashorn.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/sunec.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/sunjce_provider.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/sunpkcs11.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/ext/zipfs.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/jce.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/jfr.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/jsse.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/management-agent.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/resources.jar:/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/rt.jar:/home/camilo/my_java_projects/SpringCore_1/target/classes:/home/camilo/.m2/repository/org/springframework/spring-context/5.2.19.RELEASE/spring-context-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-aop/5.2.19.RELEASE/spring-aop-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-beans/5.2.19.RELEASE/spring-beans-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-core/5.2.19.RELEASE/spring-core-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-jcl/5.2.19.RELEASE/spring-jcl-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/org/springframework/spring-expression/5.2.19.RELEASE/spring-expression-5.2.19.RELEASE.jar:/home/camilo/.m2/repository/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar com.example.matthew.App
+There are three ways of passing properties to a Spring application. Ordered from lower to higher precedence (overriding, see below):
+1. properties file
+2. environment variables
+3. system property passed to the VM options
+
+Properties in a properties file will be part of the application artifact, for example a .jar. If we only use this way of sourcing properties to an application, we'd need to re-build and re-deploy the application whenever we change a value for a property. Fortunately, properties in properties files can be overridden by environment variables and options passed to the JVM when we launch our application, provided they have the same name. Once a property is changed through a VM option, it is enough to stop and re-launch the application.
+
+So, the two properties overriding mechanisms in Spring are: environment variables and VM options. Both can be set in Intellij under Run/Edit Configurations ... . To see the dialog box for inserting VM options go to Modify Options/Add VM option. The same for environment variables. If in the VM options we specify something like `-Dmy.name=${LOCAL_NAME}`, this will trigger a bash expansion for the environment variable `LOCAL_NAME`.
+
+Environment variables are passed as in the properties file. VM options are passed the same, just prepending them with `-D`. Environment variables will override properties file. VM options will override environment variables and properties file.
+
+AQUI: I still don't get what is an environment variable in the framework of a Spring application, or in Intellij, and the difference with VM option. 
 
 ## Spring AOP proxies ?
 Proxies is used to inject behaviour into existing code without modifying it.

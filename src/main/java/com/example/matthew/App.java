@@ -15,6 +15,8 @@ public class App {
         MyService service = ctx.getBean(MyService.class);
 
         service.doBusinessLogic();
+
+        System.out.println("System property: "+ System.getenv("my.name"));
     }
 
 }

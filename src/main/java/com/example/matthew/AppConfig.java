@@ -8,7 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @ComponentScan(basePackages = "com.example.matthew")
-@PropertySource("classpath:dbResources/application.properties")
+@PropertySource("classpath:application.properties")
 public class AppConfig {
 
 }
