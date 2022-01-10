@@ -1270,7 +1270,7 @@ If we are doing component scan with a `@ComponentScan` annotated configuration c
 </beans>
 ```
 
-The xml above also shows how we can inject properties into fields of a bean through xml configuration, instead of using the `@Value` annotation.
+The xml above also shows how we can inject properties into fields of a bean through xml configuration, instead of using the `@Value` annotation. This approach will need a setter for the field though.
 
 The `@Value` annotation in Spring can read properties from properties files, environment variables and system property (or VM options), and there is a useful overriding mechanisms in place among these sources of properties, as discussed below. 
 
@@ -1325,13 +1325,129 @@ public class AppConfig {
 ```
 and initialize our context with `ApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);`, Spring will just let the property unevaluated, and will inject something like "${my.name}" into the field. Strange. I discovered this. I need to learn how to throw and exception in this case as well.
 
+## Environment and profiles
+In Spring, `Environment` is an interface representing the environment in which the current application is running. It models two key aspects of the application environment: _profiles_ and _properties_. 
+
+A _profile_ is a named, logical group of bean definitions to be registered with the container only if the given profile is "active". Beans may be assigned to a profile whether defined in XML or via annotations. 
+
+The role of the `Environment` object with relation to profiles is in determining which profiles (if any) are currently active, and which profiles (if any) should be active by default.
+
+The role of the `Environment` object with relation to properties is to provide the user with a convenient service interface for configuring property sources and resolving properties from them.
+
+In practice, Spring profiles are mapped into application running, or execution, environments like "local", "test" and "production". Usually, we'll have different configurations for different environments, for example, db connections and REST endpoints.    
+
+The property in Spring applications (`Environment` object of the context, or Spring container) holding the active profiles being used is `spring.profiles.active` (notice the 's' in profiles). As the name of the property suggests, we can have more than one active profile. This property can be set programmatically, through VM options or through environment variables. To do it programmatically, we do the same a VM option does, to set a System property, with a string having a comma separated list of profile names:
+```java
+public class App {
+
+    public static void main(String[] args) {
+
+        System.setProperty("spring.profiles.active","local, dev");
+
+        ApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        MyService service = ctx.getBean(MyService.class);
+
+        service.doBusinessLogic();
+
+    }
+
+}
+```
+
+We can get property `spring.profile.active` from the `Environment` object, which is part of the Spring container, invoking `getActivePrifiles()`, as shown below.
+
+The only concrete class implementing interface `Environment` is `StandardProfile`. It is a collection of properties, and each application context has one. The properties are: 
+- logger
+- activeProfiles: corresponds to property `spring.profiles.active`. Returned by `Environment.getActiveProfiles()`.
+- defaultProfiles: it will always contain one profile called "default"
+- propertySource
+- propertyResolver
+As we can see there are things related to profiles and things related to properties ?
+
+Interface `ApplicationContext` extends interface `EnvironmentCapable` which has method `xxx` returning the environment object of the context object used to invoke it.
+
+`EnvironmentAware` is a _callback_ interface ? which give us access to the environment used in the Spring container through method `setEnvironment(Environment env)`. If a bean class implements it, this method will be called passing in the environment object of the context, which can be used to set an `Environment` type dependency of the bean:
+```java
+@Service
+@Primary
+public class MyServiceImpl implements MyService, EnvironmentAware {
+
+    @Value("${my.name}")
+    private String name;
+
+    private Environment environment;
+
+    private MyRepository repository;
+
+    @Autowired
+    public MyServiceImpl(MyRepository repository) {
+        this.repository = repository;
+     }
+
+    @Override
+    public void doBusinessLogic() {
+        System.out.println("Doing business logic for " + name);
+        System.out.println("Active profile is: "+ Arrays.toString(environment.getActiveProfiles()));
+        repository.doQuery();
+    }
+
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+    }
+}
+```
+If we have no active profile, `Arrays.toString(environment.getActiveProfiles())` will return `[]`.
+We could add `@Autowired` to field `private Environment environment;` and the environment object would be injected there.
+
+### Profile specific bean configuration
+The Java class configuration or xml file we use to configure our beans, can be environment specific (profile specific?).
 
 
-## Spring AOP proxies ?
-Proxies is used to inject behaviour into existing code without modifying it.
+_________
+/** Environment:
+* Interface representing the environment in which the current application is running.
+* Models two key aspects of the application environment: <em>profiles</em> and
+* <em>properties</em>. Methods related to property access are exposed via the
+* {@link PropertyResolver} superinterface.
+*
+* <p>A <em>profile</em> is a named, logical group of bean definitions to be registered
+* with the container only if the given profile is <em>active</em>. Beans may be assigned
+* to a profile whether defined in XML or via annotations; see the spring-beans 3.1 schema
+* or the {@link org.springframework.context.annotation.Profile @Profile} annotation for
+* syntax details. The role of the {@code Environment} object with relation to profiles is
+* in determining which profiles (if any) are currently {@linkplain #getActiveProfiles
+* active}, and which profiles (if any) should be {@linkplain #getDefaultProfiles active
+* by default}.
+*
+* <p><em>Properties</em> play an important role in almost all applications, and may
+* originate from a variety of sources: properties files, JVM system properties, system
+* environment variables, JNDI, servlet context parameters, ad-hoc Properties objects,
+* Maps, and so on. The role of the environment object with relation to properties is to
+* provide the user with a convenient service interface for configuring property sources
+* and resolving properties from them.
+*
+* <p>Beans managed within an {@code ApplicationContext} may register to be {@link
+* org.springframework.context.EnvironmentAware EnvironmentAware} or {@code @Inject} the
+* {@code Environment} in order to query profile state or resolve properties directly.
+*
+* <p>In most cases, however, application-level beans should not need to interact with the
+* {@code Environment} directly but instead may have to have {@code ${...}} property
+* values replaced by a property placeholder configurer such as
+* {@link org.springframework.context.support.PropertySourcesPlaceholderConfigurer
+* PropertySourcesPlaceholderConfigurer}, which itself is {@code EnvironmentAware} and
+* as of Spring 3.1 is registered by default when using
+* {@code <context:property-placeholder/>}.
+*
+* <p>Configuration of the environment object must be done through the
+* {@code ConfigurableEnvironment} interface, returned from all
+* {@code AbstractApplicationContext} subclass {@code getEnvironment()} methods. See
+* {@link ConfigurableEnvironment} Javadoc for usage examples demonstrating manipulation
+* of property sources prior to application context {@code refresh()}.
+_________
 
-## Beans profiles
-An environment is a collection of properties and profiles. Interface `ApplicationContext` extends interface `EnvironmentCapable` which has method a method returning an `Environment`. 
+
 
 A profile is an environment specific configuration.
 
@@ -1340,3 +1456,8 @@ Beans profiles were introduced in Spring to help code adapt to different environ
 The `@Profile("profile_name")` annotation in a bean classes, specifies in which "profile" such bean will be available. The profile name can be anything. When we run the application, we then need to pass the profile to the JVM (VM option), for example, `-Dspring.profiles.active=dev`, for a profile called dev.
 
 We may use profiles, for example, to ensure that some code doesn't get into production.
+
+
+## Spring AOP proxies ?
+Proxies is used to inject behaviour into existing code without modifying it.
+
