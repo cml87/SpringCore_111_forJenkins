@@ -1205,8 +1205,6 @@ them will not be called at application shutdown.
 ### Methods `init()` and `destroy()` of the `@Bean` annotation
 ... not explained properly
 
-____________________________________________
-
 ## Properties and Spring Expression Language, SpEL ?
 The Spring Expression Language can be used to:
 - Manipulate an object already created? 
@@ -1243,8 +1241,38 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
     }
 }
 ```
+We can also specify a default value for the property in case it is not found (the key is not found, not that is has an empty string value) as:
+```java
+    @Value("${app.database.uri:localhost/8080}")
+    private String databaseUri;
+```
 
-If we are doing component scan with a `@ComponentScan` annotated configuration class, we can annotate this class with `@PropertySource("classpath:application.properties")`, so the properties in this file are available to be injected in any `@Value` annotated field of the beans discovered in the scan.
+If we are doing component scan with a `@ComponentScan` annotated configuration class, we can annotate this class with `@PropertySource("classpath:application.properties")`, so the properties in this file are available to be injected in any `@Value` annotated field of the beans discovered in the scan. Similarly, we specify a properties sources with xml configurations as:
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.example.matthew"/>
+    <context:property-placeholder location="classpath:application.properties"/>
+
+    <bean id="service" class="com.example.matthew">
+        <property name="repository" ref="repository"/>
+        <property name="name" ref="${my.name}"/>
+    </bean>
+
+    <bean id="repository" class="com.example.matthew.data.MyRepositoryImpl"/>
+
+</beans>
+```
+
+The xml above also shows how we can inject properties into fields of a bean through xml configuration, instead of using the `@Value` annotation.
+
+The `@Value` annotation in Spring can read properties from properties files, environment variables and system property (or VM options), and there is a useful overriding mechanisms in place among these sources of properties, as discussed below. 
 
 ## System properties and environment variables
 
@@ -1265,7 +1293,39 @@ There are three ways of passing properties to a Spring application. Ordered from
 
 Properties in a properties file will be part of the application artifact, for example a .jar. If we only had this way for sourcing properties to an application, we'd need to re-build and re-deploy the application whenever we change a value for a property. Fortunately, properties in properties files can be overridden by environment variables and system properties (VM options), provided they have the same name. Once a property is changed through one of these mechanisms, it is enough to stop and re-launch the application.
 
-Environment variables are passed as in the properties file. VM options are passed the same, just prepending them with `-D`. Environment variables will override properties file. System properties (VM options) will override environment variables and properties files.
+Environment variables are passed as in the properties file. VM options are passed the same, just prepending them with `-D`. 
+
+Environment variables will _override_ properties file. System properties (VM options) will override environment variables and properties files.
+
+
+## Throw exception if a property is not found
+If we do component scan and properties discovering with xml as in:
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+        <context:component-scan base-package="com.example.matthew"/>
+        <context:property-placeholder location="classpath:application.properties"/>
+
+</beans>
+```
+Spring will launch an exception for any property (it's key) that it doesn't found and has no default value, in a `@Value` annotation. Spring will launch `IllegalArgumentException` during the context initialization from the xml file `  ApplicationContext ctx = new ClassPathXmlApplicationContext("applicationContext.xml");`.
+
+However, if we do the component scan and properties discovery through a  Java configuration class, as in
+```java
+@Configuration
+@ComponentScan(basePackages = "com.example.matthew")
+@PropertySource("classpath:application.properties")
+public class AppConfig {
+}
+```
+and initialize our context with `ApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);`, Spring will just let the property unevaluated, and will inject something like "${my.name}" into the field. Strange. I discovered this. I need to learn how to throw and exception in this case as well.
+
+
 
 ## Spring AOP proxies ?
 Proxies is used to inject behaviour into existing code without modifying it.
