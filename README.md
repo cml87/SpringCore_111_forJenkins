@@ -1246,20 +1246,26 @@ class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChe
 
 If we are doing component scan with a `@ComponentScan` annotated configuration class, we can annotate this class with `@PropertySource("classpath:application.properties")`, so the properties in this file are available to be injected in any `@Value` annotated field of the beans discovered in the scan.
 
+## System properties and environment variables
+
+_System properties_ is what we pass to a Java (`java ...`) program with the `-D` flag. By Bohemian from stackoverflow (https://stackoverflow.com/questions/7054972/java-system-properties-and-environment-variables/7054981#7054981): System properties are set on the Java command line using the `-Dpropertyname=value` syntax. They can also be added at runtime using `System.setProperty(String key, String value)` or via the various `System.getProperties().load()` methods. To get a specific system property you can use `System.getProperty(String key)` or `System.getProperty(String key, String def)`. 
+
+In IntelliJ, we set system properties as "VM options"  under Run/Edit Configurations ... . To see the dialog box for inserting VM options go to Modify Options/Add VM option. If in the VM options we specify something like `-Dmy.name=${LOCAL_NAME}`, this will trigger a bash expansion for the environment variable `LOCAL_NAME`, in the terminal session (connection to the linux kernel) where we run our Java program.
+
+_Environment variables_ are the usual environment variables in Linux. They are valid for the current terminal session.  By Bohemian from stackoverflow (https://stackoverflow.com/questions/7054972/java-system-properties-and-environment-variables/7054981#7054981): Environment variables are set in the OS, e.g. in Linux `export HOME=/Users/myusername`, and, unlike properties, may not be set at runtime. To get a specific environment variable you can use `System.getenv(String name)`.
+
+In IntelliJ, environment variables are added in the same way as VM options, just using the dialog box for "environment variables". When we run our program by clicking in IntelliJ IDE's play button, IntelliJ will open a new terminal session, will set the environment variables we specified in under Run/Edit configuration, and then will run our program invoking `java ...` on that terminal. When the program ends, that terminal is closed.  
+
 ## Properties overriding
 
 There are three ways of passing properties to a Spring application. Ordered from lower to higher precedence (overriding, see below):
 1. properties file
 2. environment variables
-3. system property passed to the VM options
+3. system property (or VM options)
 
-Properties in a properties file will be part of the application artifact, for example a .jar. If we only use this way of sourcing properties to an application, we'd need to re-build and re-deploy the application whenever we change a value for a property. Fortunately, properties in properties files can be overridden by environment variables and options passed to the JVM when we launch our application, provided they have the same name. Once a property is changed through a VM option, it is enough to stop and re-launch the application.
+Properties in a properties file will be part of the application artifact, for example a .jar. If we only had this way for sourcing properties to an application, we'd need to re-build and re-deploy the application whenever we change a value for a property. Fortunately, properties in properties files can be overridden by environment variables and system properties (VM options), provided they have the same name. Once a property is changed through one of these mechanisms, it is enough to stop and re-launch the application.
 
-So, the two properties overriding mechanisms in Spring are: environment variables and VM options. Both can be set in Intellij under Run/Edit Configurations ... . To see the dialog box for inserting VM options go to Modify Options/Add VM option. The same for environment variables. If in the VM options we specify something like `-Dmy.name=${LOCAL_NAME}`, this will trigger a bash expansion for the environment variable `LOCAL_NAME`.
-
-Environment variables are passed as in the properties file. VM options are passed the same, just prepending them with `-D`. Environment variables will override properties file. VM options will override environment variables and properties file.
-
-AQUI: I still don't get what is an environment variable in the framework of a Spring application, or in Intellij, and the difference with VM option. 
+Environment variables are passed as in the properties file. VM options are passed the same, just prepending them with `-D`. Environment variables will override properties file. System properties (VM options) will override environment variables and properties files.
 
 ## Spring AOP proxies ?
 Proxies is used to inject behaviour into existing code without modifying it.

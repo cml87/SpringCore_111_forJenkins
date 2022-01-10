@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Primary
 public class MyServiceImpl implements MyService {
 
-    @Value("${my.name}")
+    @Value("${myname}")
     private String name;
 
     private MyRepository repository;

@@ -16,7 +16,7 @@ public class App {
 
         service.doBusinessLogic();
 
-        System.out.println("System property: "+ System.getenv("my.name"));
+        System.out.println("System property: "+ System.getenv("myname"));
     }
 
 }
