@@ -1405,7 +1405,7 @@ Another way is to just add `@Autowired` to a field `private Environment environm
 
 We may use profiles, for example, to ensure that some code doesn't get into production.
 
-### Profile specific bean and properties configuration
+### Profile specific bean and properties configuration ? 
 The Java class configuration, or xml file, we use to configure our beans (our IoC container), can be environment specific (profile specific). We can tell Spring to instantiate a given configuration bean, or all the beans discovered in its component scan, annotating it with `@Profile("profile_name")`. Only if "profile_name" matches one of the active profiles (one in `spring.profiles.active` or `spring.profiles.default`) that bean (or those beans, component scan) will be instantiated, or registered in the container. I think that when we use `@Profile` in a config class with a component scan, it will apply to all beans discovered in the scan. Remember that we initialize the container passing the configuration class we want to use with `ApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class)`. 
 
 If a bean, or those component scanned by a config class, has no `@Profile` annotation, `@Profile("default")` will be assumed by default, and will always be instantiated whatever the active profiles is, since the "default" profile is always active. The profile "default" is one profile always inserted by Spring in the list of default profiles `spring.profiles.default`.
@@ -1418,7 +1418,7 @@ In Spring Boot we can then put all the properties files as-per profile, inside o
 
 In normal Spring Framework, we'll explicitly pass to the config class which properties file we want to use through annotations, for example, `@PropertySource("classpath:application-local.properties")`. 
 
-### Setting up different configurations (beans and properties) for different environments
+### Setting up different configurations (beans and properties) for different environments ?
 We can actually pass different configuration classes to `AnnotationConfigApplicationContext()` when we instantiate the context in a Spring application. See its overloaded constructors. Each of these classes may in turn be annotated with different profile names, such that its component scanned beans will be registered in the container if its profile name matches one active profile. This is the mechanisms that allows instantiating certain beans, and considering specific properties files, passing the active profiles from outside (VM option or environment variable, see above), without having to modify the source code. This is how we would do it:
 ```java
 package com.example.matthew;
@@ -1467,6 +1467,7 @@ public class ProdConfig {
 ```
 In this example, we've set the profile manually , but we can pass it as VM option (eg. `-Dspring.profiles.active=prod`) or set is an environment variable in the terminal from where we run the java program.
 
+If we pass to `AnnotationConfigApplicationContext` a list of configuration classes having properties files with properties with the same key, the properties files of the right-most config class passed, will take precedence, and will override the values of the properties specified for the other config classes to the left. 
 
 
 
