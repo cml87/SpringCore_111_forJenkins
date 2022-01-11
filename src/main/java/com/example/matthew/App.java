@@ -10,7 +10,7 @@ public class App {
 
     public static void main(String[] args) {
 
-       System.setProperty("spring.profiles.active","local, dev");
+        System.setProperty("spring.profiles.active","local");
 
 
         //ApplicationContext ctx = new ClassPathXmlApplicationContext("applicationContextMatthew.xml");

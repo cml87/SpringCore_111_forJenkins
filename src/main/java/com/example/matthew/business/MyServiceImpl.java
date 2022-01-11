@@ -36,5 +36,5 @@ public class MyServiceImpl implements MyService, EnvironmentAware {
     @Override
     public void setEnvironment(Environment environment) {
         this.environment = environment;
-    }
+     }
 }
