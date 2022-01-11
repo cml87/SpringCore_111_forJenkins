@@ -12,7 +12,7 @@ public class App {
 
     public static void main(String[] args) {
 
-        System.setProperty("spring.profiles.active","dev, prod");
+        System.setProperty("spring.profiles.active","prod");
 
         //ApplicationContext ctx = new ClassPathXmlApplicationContext("applicationContextMatthew.xml");
         //ApplicationContext ctx = new AnnotationConfigApplicationContext("com.example.matthew");
