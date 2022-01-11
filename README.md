@@ -1469,8 +1469,70 @@ In this example, we've set the profile manually , but we can pass it as VM optio
 
 If we pass to `AnnotationConfigApplicationContext` a list of configuration classes having properties files with properties with the same key, the properties files of the right-most config class passed, will take precedence, and will override the values of the properties specified for the other config classes to the left. 
 
+## The proxy design pattern
 
+The proxy design pattern is a pattern that allow us to inject behaviour into existing code almost without modifying it. More specifically, it allows us to modify the obtained/effective behaviour of an object without modifying its class definition. The target objects needs to have its "behaviour" defined by an interface it implements, though. 
 
+Consider a `PersonImpl` class implementing interface `Person`:
+```java
+public interface Person {
+    void greet();
+}
+```
+```java
+public class PersonImp implements Person {
+    @Override
+    public void greet(){  System.out.println("Hello there!");  }
+}
+```
+In the main() we will in invoke this as
+```java
+        // invoking through the interface
+        Person p = new PersonImp();
+        p.greet();
+```
+We can define a proxy class for _all_ classes implementing the `Person` interface as:
+```java
+public class Proxy implements Person{
+
+    private Person delegate;
+
+    public Proxy(Person delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public void greet() {
+        delegate.greet(); // prints "Hello there!"
+    }
+}
+```
+This would allow us to do in the main():
+```java
+        //invoking through a proxy
+        Person p1 = new Proxy(new PersonImp());
+        p1.greet();
+```
+<u>We then insert the new functionalities in the proxy class's constructor or proxy method</u> (the method of the interface). For example:
+```java
+public class Proxy implements Person{
+
+    private Person delegate;
+
+    public Proxy(Person delegate) {
+        System.out.println("Actually, ");
+        this.delegate = delegate;
+    }
+
+    @Override
+    public void greet() {
+        System.out.println("I just want to say ...");                
+        delegate.greet(); // prints: "Hello there!" 
+    }
+}
+```
+
+As can be seen, a proxy class wraps an interface, and thus all classes implementing that interface.
 
 
 

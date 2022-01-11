@@ -7,5 +7,4 @@ public class PersonImp implements Person {
         System.out.println("Hello there !");
     }
 
-
 }
