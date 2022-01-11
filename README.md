@@ -1224,7 +1224,7 @@ The properties file is normally placed at `src/main/resources/`, and named `appl
 Using annotation `@PropertiesSource` in a class, we instruct Spring to read the specified properties file and load its content into the application context. Then, using the `@Value` annotation we can inject the required property into the class field:
 ```java
 @Component
-@PropertySource(value = "classpath:application-local.properties")
+@PropertySource(value = "classpath:application-dev.properties")
 class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
 
     @Value("${app.database.uri}")
@@ -1319,7 +1319,7 @@ However, if we do the component scan and properties discovery through a  Java co
 ```java
 @Configuration
 @ComponentScan(basePackages = "com.example.matthew")
-@PropertySource("classpath:application-local.properties")
+@PropertySource("classpath:application-dev.properties")
 public class AppConfig {
 }
 ```
@@ -1420,10 +1420,52 @@ In normal Spring Framework, we'll explicitly pass to the config class which prop
 
 ### Setting up different configurations (beans and properties) for different environments
 We can actually pass different configuration classes to `AnnotationConfigApplicationContext()` when we instantiate the context in a Spring application. See its overloaded constructors. Each of these classes may in turn be annotated with different profile names, such that its component scanned beans will be registered in the container if its profile name matches one active profile. This is the mechanisms that allows instantiating certain beans, and considering specific properties files, passing the active profiles from outside (VM option or environment variable, see above), without having to modify the source code. This is how we would do it:
+```java
+package com.example.matthew;
 
+import com.example.matthew.business.MyService;
+import com.example.matthew.config.DevConfig;
+import com.example.matthew.config.ProdConfig;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+public class App {
 
+    public static void main(String[] args) {
 
+        System.setProperty("spring.profiles.active","prod");
+
+        ApplicationContext ctx = new AnnotationConfigApplicationContext(DevConfig.class, ProdConfig.class);
+
+        MyService service = ctx.getBean(MyService.class);
+
+        service.doBusinessLogic();
+    }
+}
+```
+```java
+package com.example.matthew.config;
+import org.springframework.context.annotation.*;
+
+@Profile("dev")
+@Configuration
+@ComponentScan(basePackages = "com.example.matthew")
+@PropertySource("classpath:application-dev.properties")
+public class DevConfig {
+}
+```
+```java
+package com.example.matthew.config;
+import org.springframework.context.annotation.*;
+
+@Profile("prod")
+@Configuration
+@ComponentScan(basePackages = "com.example.matthew")
+@PropertySource("classpath:application-prod.properties")
+public class ProdConfig {
+}
+```
+In this example, we've set the profile manually , but we can pass it as VM option (eg. `-Dspring.profiles.active=prod`) or set is an environment variable in the terminal from where we run the java program.
 
 
 
