@@ -1616,7 +1616,34 @@ Salut mon ami!
 
 ### Proxy: Spring dynamic proxies
 
-Spring allows creating proxies dynamically more easily. Under the hood, it does the same the dynamic proxies of the JDK do.
+Spring allows creating proxies dynamically more easily. If we use interfaces to refer to the proxied object, it will use JDK dynamic proxies. If we are proxying an object that implements no interface, it will use Spring CGLIB generated dynamic proxy. 
+
+Spring CGLIB is a strategy to genera a proxy by subclassing the proxied class on the fly (in the JVM). The new subclass, will overwrite the proxied methods of the superclass. Here is how it would be:
+```java
+public class PPerson {
+
+    public void greet(){ System.out.println("Hello there !"); }
+    public void greetInFrench() { System.out.println("Salut mon ami!"); }
+}
+```
+In the main()
+```java
+        PPerson p3 = new PPerson();
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+        proxyFactoryBean.setTarget(p3);
+        PPerson bean = (PPerson) proxyFactoryBean.getObject();
+        bean.greet();
+```
+With an interface instead, it would be very similar:
+```java
+        System.out.println("\ninvoking through Spring JDK dynamic proxy");
+        Person p4 = new PersonImp();
+        ProxyFactoryBean proxyFactoryBean2 = new ProxyFactoryBean();
+        proxyFactoryBean2.setTarget(p4);
+        Person bean2 = (Person) proxyFactoryBean2.getObject();
+        bean2.greet();
+```
+
 
 
 , for example to start a transaction whenever a method of a class is invoked, using a transaction manager?. We can have a proxy over a service class that intercepts calls to every method of the class automatically. Dynamic proxies are a feature of the JDK, though.
