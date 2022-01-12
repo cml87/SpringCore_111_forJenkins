@@ -1539,7 +1539,7 @@ As can be seen, a proxy class implements and wraps an interface, and thus all cl
  
 Hand coded proxies, like the one we just showed have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through.
 
-### Proxy: JDK dynamic proxies
+### Proxy: JDK dynamic proxy ?
 The `java.lang.reflect` library from the JDK allows implementing custom dynamic proxy classes, such as the one shown below `TimestampLoggingProxy`. They will be dynamic in that they will intercept all method calls of the target class in the same way (adding the same behaviour) without needing to call them explicitly. They use reflections:
 ```java
 import java.lang.reflect.InvocationHandler;
@@ -1614,14 +1614,12 @@ Wed Jan 12 09:39:19 CET 2022
 Salut mon ami!
 ```
 
-### Proxy: Spring dynamic proxies
-
+### Proxy: Spring dynamic proxies ?
 Spring allows creating proxies dynamically more easily. If we use interfaces to refer to the proxied object, it will use JDK dynamic proxies. If we are proxying an object that implements no interface, it will use Spring CGLIB generated dynamic proxy. 
 
 Spring CGLIB is a strategy to genera a proxy by subclassing the proxied class on the fly (in the JVM). The new subclass, will overwrite the proxied methods of the superclass. Here is how it would be:
 ```java
 public class PPerson {
-
     public void greet(){ System.out.println("Hello there !"); }
     public void greetInFrench() { System.out.println("Salut mon ami!"); }
 }
@@ -1634,7 +1632,7 @@ In the main()
         PPerson bean = (PPerson) proxyFactoryBean.getObject();
         bean.greet();
 ```
-With an interface instead, it would be very similar:
+In this case `bean` would be a CGLIB proxy, not the `PPerson` bean. If we use an interface instead, the proxy class (`bean2`) would be a JDK dynamic AOP proxy:
 ```java
         System.out.println("\ninvoking through Spring JDK dynamic proxy");
         Person p4 = new PersonImp();
@@ -1644,11 +1642,52 @@ With an interface instead, it would be very similar:
         bean2.greet();
 ```
 
+### @Transactional ?
+Spring uses proxies to render beans methods transactional, so a transaction is started whenever they are invoked. For this, a transaction manager needs to be registered in the container. This is an example, though I don't understand it:
+```java
+@Configuration
+@ComponentScan("com.example.matthew.transactional")
+@EnableTransactionManagement
+public class AppConfig {
+    // this is the transaction manager bean
+    @Bean
+    public PlatformTransactionManager transactionManager(){
+        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
+        transactionManager.setDataSource(new EmbeddedDatabaseBuilder().setType(EmbeddedDatabaseType.H2).build());
+        return transactionManager;
+    }
+}
+```
+```java
+@Service
+public class OrderService {
+    @Transactional
+    public void placeOrder(){
+        System.out.println("Placing order ...");
+    }
+}
+```
+In the main() we then do:
+```java
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+        OrderService orderService = applicationContext.getBean(OrderService.class);
+        orderService.placeOrder();
+```
+Here `orderService` will be a CGLIB proxy, not the actual orderService bean, because of the `@Transactional` annotation in the service class.
+The `OrderService` bean may have as dependency some repositories, that perform operations on e database. With the `@Transactional` annotation we can make the service methods transactional. 
 
+I think the transaction manager is a thing of a RDBMS, so we need to choose one, like H2. Then we plug it into a method of a service class to make it transactional. The method will use a repository class to perform operations over a db.
 
-, for example to start a transaction whenever a method of a class is invoked, using a transaction manager?. We can have a proxy over a service class that intercepts calls to every method of the class automatically. Dynamic proxies are a feature of the JDK, though.
-
-
-## Spring AOP proxies ?
-Proxies is used to inject behaviour into existing code without modifying it.
+For this example to work we need the fallowing dependencies in the pom:
+```xml
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+        <dependency>
+        <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.200</version>
+        </dependency>
+```
 
