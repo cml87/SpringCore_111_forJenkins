@@ -10,9 +10,17 @@ public class MyApp {
         Person p = new PersonImp();
         p.greet();
         System.out.println("");
-        //invoking through as proxy
-        Person p1 = new Proxy(new PersonImp());
+        //invoking through handmade proxy
+        Person p1 = new HandmadeProxy(new PersonImp());
         p1.greet();
+
+        System.out.println("");
+        //invoking through java.lang.reflect dynamic proxy
+        Person p2 = (Person) TimestampLoggingProxy.getProxyFor(new PersonImp());
+        p2.greet();
+        p2.greetInFrench();
+
+
 
     }
 

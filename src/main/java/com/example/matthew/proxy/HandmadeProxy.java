@@ -1,10 +1,10 @@
 package com.example.matthew.proxy;
 
-public class Proxy implements Person{
+public class HandmadeProxy implements Person{
 
     private Person delegate;
 
-    public Proxy(Person delegate) {
+    public HandmadeProxy(Person delegate) {
         System.out.println("Actually, ");
         this.delegate = delegate;
     }
@@ -13,5 +13,10 @@ public class Proxy implements Person{
     public void greet() {
         System.out.println("I just want to say ...");
         delegate.greet();
+    }
+
+    @Override
+    public void greetInFrench() {
+
     }
 }

@@ -1471,9 +1471,9 @@ If we pass to `AnnotationConfigApplicationContext` a list of configuration class
 
 ## The proxy design pattern
 
-The proxy design pattern is a pattern that allow us to inject behaviour into an existing class without modifying it. The class target objects needs to have its "behaviour" defined by an interface it implements. The proxy class will proxy to the target class through that interface.
+The proxy design pattern is a pattern that allow us to inject behaviour into an existing class without modifying it, by intercepting calls to its methods. The class target objects needs to have its "behaviour" defined by an interface it implements. The proxy class will proxy to the target class through that interface.
 
-### Proxy: hand made
+### Proxy: handmade
 A hand made implementation of the proxy pattern is the fallowing. Consider a `PersonImpl` class implementing interface `Person`. The proxy interface will be `Person`, the target class will be `PersonImpl` and the behaviour of this class will be changed by changing what we get when calling its method `greet()`:
 ```java
 public interface Person {
@@ -1514,6 +1514,7 @@ This would allow us to do in the main():
         Person p1 = new Proxy(new PersonImp());
         p1.greet();
 ```
+Notice how we still call `Person.call()`.
 <u>We then insert the new functionalities in the proxy class's constructor or proxy method</u> (the method of the interface). For example:
 ```java
 public class Proxy implements Person{
@@ -1539,14 +1540,87 @@ As can be seen, a proxy class implements and wraps an interface, and thus all cl
 Hand coded proxies, like the one we just showed have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through.
 
 ### Proxy: JDK dynamic proxies
-The disadvantages of a hand made proxy are resolved with xxx. 
+The `java.lang.reflect` library from the JDK allows implementing custom dynamic proxy classes, such as the one shown below `TimestampLoggingProxy`. They will be dynamic in that they will intercept all method calls of the target class in the same way (adding the same behaviour) without needing to call them explicitly. They use reflections:
+```java
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Date;
+
+public class TimestampLoggingProxy implements InvocationHandler {
+
+    // this will be the delegate
+    private Object delegate;
+
+    // notice the private constructor
+    private TimestampLoggingProxy(Object delegate) {
+        this.delegate = delegate;
+    }
+
+    public static Object getProxyFor(Object o){
+         return Proxy.newProxyInstance(
+                 o.getClass().getClassLoader(),
+                 o.getClass().getInterfaces(),
+                 new TimestampLoggingProxy(o)
+         );
+    }
 
 
-Spring allows creating proxies dynamically, for example to start a transaction whenever a method of a class is invoked, using a transaction manager?. We can have a proxy over a service class that intercepts calls to every method of the class automatically. Dynamic proxies are a feature of the JDK, though.
+   // This method will be automatically invoked when any method of the target class which is being proxied through is invoked.
+   // It will receive in the parameters the proxy object `proxy`, the method which is being invoked `method` and the arguments
+    // `args` passed to that method being invoked. We can do whatever we want with this information in the `invoke()` method.
+    // We could even decide to not call the method of the target class at all.
 
-## JDK dynamic proxies
+    // java.lang.reflect has not been refactored to use generics, so we still need to use Object and casting, as in the old times
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
- 
+        Thread.sleep(1000);
+        System.out.println(new Date()); // this is the added functionality
+        return method.invoke(delegate, args); // call to the original method
+
+    }
+}
+```
+```java
+public interface Person {
+    void greet();
+    void greetInFrench();
+}
+```
+```java
+public class PersonImp implements Person {
+    @Override
+    public void greet(){
+        System.out.println("Hello there!");
+    }
+    @Override
+    public void greetInFrench() {
+        System.out.println("Salut mon ami!");
+    }
+}
+```
+In the main()
+```java
+        Person p2 = (Person) TimestampLoggingProxy.getProxyFor(new PersonImp());
+        p2.greet();
+        p2.greetInFrench();
+```
+This will print: 
+```text
+Wed Jan 12 09:39:18 CET 2022
+Hello there!
+Wed Jan 12 09:39:19 CET 2022
+Salut mon ami!
+```
+
+### Proxy: Spring dynamic proxies
+
+Spring allows creating proxies dynamically more easily. Under the hood, it does the same the dynamic proxies of the JDK do.
+
+
+, for example to start a transaction whenever a method of a class is invoked, using a transaction manager?. We can have a proxy over a service class that intercepts calls to every method of the class automatically. Dynamic proxies are a feature of the JDK, though.
+
 
 ## Spring AOP proxies ?
 Proxies is used to inject behaviour into existing code without modifying it.

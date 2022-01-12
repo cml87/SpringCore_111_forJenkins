@@ -7,4 +7,9 @@ public class PersonImp implements Person {
         System.out.println("Hello there !");
     }
 
+    @Override
+    public void greetInFrench() {
+        System.out.println("Salut mon ami!");
+    }
+
 }
