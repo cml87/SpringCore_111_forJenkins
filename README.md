@@ -1471,9 +1471,10 @@ If we pass to `AnnotationConfigApplicationContext` a list of configuration class
 
 ## The proxy design pattern
 
-The proxy design pattern is a pattern that allow us to inject behaviour into existing code almost without modifying it. More specifically, it allows us to modify the obtained/effective behaviour of an object without modifying its class definition. The target objects needs to have its "behaviour" defined by an interface it implements, though. 
+The proxy design pattern is a pattern that allow us to inject behaviour into an existing class without modifying it. The class target objects needs to have its "behaviour" defined by an interface it implements. The proxy class will proxy to the target class through that interface.
 
-Consider a `PersonImpl` class implementing interface `Person`:
+### Proxy: hand made
+A hand made implementation of the proxy pattern is the fallowing. Consider a `PersonImpl` class implementing interface `Person`. The proxy interface will be `Person`, the target class will be `PersonImpl` and the behaviour of this class will be changed by changing what we get when calling its method `greet()`:
 ```java
 public interface Person {
     void greet();
@@ -1485,7 +1486,7 @@ public class PersonImp implements Person {
     public void greet(){  System.out.println("Hello there!");  }
 }
 ```
-In the main() we will in invoke this as
+In the main() we would normally invoke with:
 ```java
         // invoking through the interface
         Person p = new PersonImp();
@@ -1528,15 +1529,24 @@ public class Proxy implements Person{
     public void greet() {
         System.out.println("I just want to say ...");                
         delegate.greet(); // prints: "Hello there!" 
+        System.out.printl("That's it!");
+                
     }
 }
 ```
+As can be seen, a proxy class implements and wraps an interface, and thus all classes implementing that interface.
+ 
+Hand coded proxies, like the one we just showed have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through.
 
-As can be seen, a proxy class wraps an interface, and thus all classes implementing that interface.
+### Proxy: JDK dynamic proxies
+The disadvantages of a hand made proxy are resolved with xxx. 
 
 
+Spring allows creating proxies dynamically, for example to start a transaction whenever a method of a class is invoked, using a transaction manager?. We can have a proxy over a service class that intercepts calls to every method of the class automatically. Dynamic proxies are a feature of the JDK, though.
 
+## JDK dynamic proxies
 
+ 
 
 ## Spring AOP proxies ?
 Proxies is used to inject behaviour into existing code without modifying it.
