@@ -1125,7 +1125,7 @@ There are mainly three ways to interact with a Spring managed bean's lifecycle, 
 3. Methods `init()` and `destroy()` of the `@Bean` annotation
 
 ### Interfaces `InitializingBean` and `DisposableBean`
-Interface `InitializingBean` is a callback interface whose method `afterPropertiesSet()` is called by Spring right after all the properties (fields or dependencies) of the bean have been set. On the other end, interface `DisposableBean` has callback method `destroy()`, which is called when the context is being closed explicitly:
+Interface `InitializingBean` is a callback interface whose method `afterPropertiesSet()` is called by Spring right after all the properties (fields or dependencies) of the bean have been set. On the other end, interface `DisposableBean` has callback method `destroy()`, which is called when the context is being closed <u>explicitly</u>:
 ```java
 @Service
 public class EmployeeService implements InitializingBean, DisposableBean {
@@ -1150,6 +1150,8 @@ public class EmployeeRepository {
 public class MyApp {
     public static void main(String[] args) {
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.matthew.lifecycle");
+        System.out.println("app is working ...");
+        //((AnnotationConfigApplicationContext) applicationContext).close();
         ((AbstractApplicationContext) applicationContext).close();
     }
 }
@@ -1157,82 +1159,30 @@ public class MyApp {
 `AnnotationConfigApplicationContext` extends from `AbstractApplicationContext`, which implements `ApplicationContext` interface. See the hierarchy of `ApplicationContext`. The abstract class `AbstractApplicationContext` implements methods `start()` and `close()` which start and stop the container (it got these methods from other interfaces appearing higher in the hierarchy). When the method `close()` is called by Spring and all beans start to be destroyed (memory freed and references deleted, I think), somewhere Spring calls the `destroy()` method of the callback interface `DisposableBean`, in the beans that implement it. This give chance to these beans to do some clean-up tasks, or <u>to free resources (connections, threads, etc)</u> explicitly, if needed, before disappearing forever (destroyed). 
 
 
-
-
-We'll examine the Spring lifecycle for the _singleton_ and _prototype_ scope beans.
-
-The recommended way to interact with beans lifecycle is through the JSR-250 annotation 
-`@PostConstruct` and `@Predestroy`.
-
-### Interfaces `InitializingBean` and `DisposableBean`
-
-If we make a bean implement this two interfaces, we'll need to implement methods 
-`afterPropertiesSet()` and `destroy()` which will be called by the container? after? 
-the bean is initialized, and when it is destroyed (application shutdown), 
-respectively. For example:
+With Spring, we can make a Java application listen for its JVM shutting down, and close its context as response (call method `close()` on the context), so we don't need to do it explicitly as in the example above. We do it by registering a shutting down hook with the JVM runtime in the application context instance. The hook will be called `SpringContextShutdownHook`:
 ```java
-@Component
-class AdvancedSpellChecker implements InitializingBean, DisposableBean, SpellChecker{
-    @Override
-    public void checkSpelling(String emailMessage){
-        if (emailMessage!=null){
-            System.out.println("Advanced spelling check ...");
-            System.out.println("Spell check complete!!");
-        } else {
-            throw new RuntimeException("An exception occurred while checking the spelling.");
-        }
-    }
-
-    //from the DisposableBean interface
-    @Override
-    public void destroy() throws Exception {
-        System.out.println("Destroyed properties");
-    }
-
-    //from the InitializingBean interface
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        System.out.println("Setting properties after bean is initialized");
-    }
-}
-```
-The events of beans initialization will be automatically listened by our application 
-context. An application context of type `AnnotationConfigApplicationContext` will listen 
-to them out of the box ?. However, to be able to listen for the events occurring at 
-the time of shutting down the application, we need to explicitly register a shutdown 
-hook with our application context instance. We do this calling 
-`registerShutdownHook()` on our application context instance:
-```java
-public class EmailApplication {
+public class MyApp {
     public static void main(String[] args) {
-
-        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-
-        EmailClient emailClient = applicationContext.getBean("emailClient",EmailClient.class);
-
-        emailClient.sendEmail("Hey, this is my first email message");
-
-        ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook();
-
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.matthew.lifecycle");
+        ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook(); //register a JVM shutdown hook
+        System.out.println("app is working ...");
+        // here the JVM will start shutting down, which will be registered by our context, calling close() on it
     }
 }
 ```
-Here we need down-casting since `applicationContext` is of type interface, and we need to 
-invoke with the object it is pointing to.
+This will print:
+```text
+Loading static data ..
+app is working ...
+Destroying service bean ...
+```
+This hook, or listening mechanisms, is the same used by an application context of type `AnnotationConfigApplicationContext` ? to call the `afterPropertiesSet()` method of a bean implementing `DisposableBean`, when it detects all the bean's properties have been set ?. Context `AnnotationConfigApplicationContext` just happen to come with this hook already, so we don't need to register it.
 
-Once the application context is listening for the shutdown events as well, as soon as it 
-detects the 'destroy event' of the `AdvanvesSpellChecker` bean, it will call method 
-`destroy()` on it ? 
-
-If the bean annotated with `InitializingBean` is of scope _prototype_, whenever we 
-ask the container for it, a new bean will be created and returned. Since we have a hook 
-for the bean initialization events, method `afterPropertiesSet()` of this interface 
-will be called each time we ask for such bean to the container.
-However, with prototype scope beans, Spring does not manage its destruction. Therefore, 
-even if one of such beans implements interface `DisposableBean`, method `destroy()` on 
-them will not be called at application shutdown.
+If a bean annotated with `InitializingBean` is of scope _prototype_, whenever we ask the container for it, a new bean will be created and returned. Since our context will have a hook for bean initialization events, method `afterPropertiesSet()` of beans implementing `InitializingBean` will be called each time we ask for such beans to the container. However, with prototype scope beans, Spring does not manage its destruction. Therefore,
+even if one of such beans implements interface `DisposableBean`, method `destroy()` on them will not be called at when the container closes.
 
 ### Annotations `@PostConstruct` and `@PreDestroy`
+The recommended way to interact with beans lifecycle is through the JSR-250 annotation
 ... not explained properly
 ### Methods `init()` and `destroy()` of the `@Bean` annotation
 ... not explained properly

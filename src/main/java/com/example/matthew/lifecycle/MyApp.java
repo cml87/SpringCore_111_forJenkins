@@ -8,8 +8,10 @@ public class MyApp {
 
     public static void main(String[] args) {
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.matthew.lifecycle");
-        ((AbstractApplicationContext) applicationContext).close();
+        //((AbstractApplicationContext) applicationContext).close();
+        ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook();
 
+        System.out.println("app is working ...");
     }
 
 }
