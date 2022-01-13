@@ -1118,14 +1118,46 @@ Attention should be paid to the fact that a bean that implements Spring's Factor
 
 It also allows working with static methods inside a class??
 
-
-____________________________________________
-There are mainly three ways to interact with the bean lifecycle. We may need this, for example, if we want to read some files and do some business logic, at the start of the application.
-Similarly, we may need it if we want to clean some additional resources in our environment, 
-at the time of application shutdown. To achieve this we can use three types of bean lifecycle hooks:
-1. Interfaces `InitializingBean` and `DisposableBean`, the bean implements them 
+## Beans lifecycle callbacks
+There are mainly three ways to interact with a Spring managed bean's lifecycle, to run some actions when it is created and destroyed. We may need this, for example, if we want to read some files and do some business logic, at the start of the application, or if we want to free some resources explicitly when the application is shutting down. We can do this with any of the three types of bean lifecycle hooks:
+1. Interfaces `InitializingBean` and `DisposableBean`
 2. Annotations `@PostConstruct` and `@Predestroy` (JSR-250)
 3. Methods `init()` and `destroy()` of the `@Bean` annotation
+
+### Interfaces `InitializingBean` and `DisposableBean`
+Interface `InitializingBean` is a callback interface whose method `afterPropertiesSet()` is called by Spring right after all the properties (fields or dependencies) of the bean have been set. On the other end, interface `DisposableBean` has callback method `destroy()`, which is called when the context is being closed explicitly:
+```java
+@Service
+public class EmployeeService implements InitializingBean, DisposableBean {
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Override
+    public void afterPropertiesSet() throws Exception { employeeRepository.loadStaticData();  }
+
+    @Override 
+    public void destroy() throws Exception { System.out.println("Destroying service bean ..."); }
+}
+```
+```java
+@Repository
+public class EmployeeRepository {
+    public void loadStaticData(){  System.out.println("Loading static data ..");  }
+}
+```
+```java
+public class MyApp {
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.matthew.lifecycle");
+        ((AbstractApplicationContext) applicationContext).close();
+    }
+}
+```
+`AnnotationConfigApplicationContext` extends from `AbstractApplicationContext`, which implements `ApplicationContext` interface. See the hierarchy of `ApplicationContext`. The abstract class `AbstractApplicationContext` implements methods `start()` and `close()` which start and stop the container (it got these methods from other interfaces appearing higher in the hierarchy). When the method `close()` is called by Spring and all beans start to be destroyed (memory freed and references deleted, I think), somewhere Spring calls the `destroy()` method of the callback interface `DisposableBean`, in the beans that implement it. This give chance to these beans to do some clean-up tasks, or <u>to free resources (connections, threads, etc)</u> explicitly, if needed, before disappearing forever (destroyed). 
+
+
+
 
 We'll examine the Spring lifecycle for the _singleton_ and _prototype_ scope beans.
 
@@ -1471,7 +1503,7 @@ If we pass to `AnnotationConfigApplicationContext` a list of configuration class
 
 ## The proxy design pattern
 
-The proxy design pattern is a pattern that allow us to inject behaviour into an existing class without modifying it, by intercepting calls to its methods. The class target objects needs to have its "behaviour" defined by an interface it implements. The proxy class will proxy to the target class through that interface.
+The proxy design pattern is a pattern that allow us to inject behaviour into an existing class without modifying it, by intercepting calls to its methods. The target, or proxied, class needs to have its "behaviour" defined by an interface it implements. The proxy class will proxy the target class through that interface.
 
 ### Proxy: handmade
 A hand made implementation of the proxy pattern is the fallowing. Consider a `PersonImpl` class implementing interface `Person`. The proxy interface will be `Person`, the target class will be `PersonImpl` and the behaviour of this class will be changed by changing what we get when calling its method `greet()`:
@@ -1535,12 +1567,19 @@ public class Proxy implements Person{
     }
 }
 ```
-As can be seen, a proxy class implements and wraps an interface, and thus all classes implementing that interface.
+This will print:
+```text
+Actually,
+I just want to say ...
+Hello there!
+That's it!
+```
+istead of just `Hello there!`. As can be seen, a proxy class implements and wraps an interface, and thus all classes implementing that interface.
  
-Hand coded proxies, like the one we just showed have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through.
+Handcoded proxies, like the one we just showed, have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through. Dynamic proxies solve this issue.
 
 ### Proxy: JDK dynamic proxy ?
-The `java.lang.reflect` library from the JDK allows implementing custom dynamic proxy classes, such as the one shown below `TimestampLoggingProxy`. They will be dynamic in that they will intercept all method calls of the target class in the same way (adding the same behaviour) without needing to call them explicitly. They use reflections:
+The `java.lang.reflect` library from the JDK allows implementing custom dynamic proxy classes, such as the one shown below `TimestampLoggingProxy`. These proxies will be dynamic in that they will intercept all method calls of the target class in the same way (adding the same behaviour) without needing to call them explicitly. They will use reflections instead:
 ```java
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
