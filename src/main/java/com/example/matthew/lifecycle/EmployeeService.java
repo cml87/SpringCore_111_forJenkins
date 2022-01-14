@@ -5,19 +5,22 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 @Service
-public class EmployeeService implements InitializingBean, DisposableBean {
+public class EmployeeService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    @PostConstruct
+    public void myPostConstruct() throws Exception {
         employeeRepository.loadStaticData();
     }
 
-    @Override
-    public void destroy() throws Exception {
+    @PreDestroy
+    public void myPreDestroy() throws Exception {
         System.out.println("Destroying service bean ...");
     }
 }

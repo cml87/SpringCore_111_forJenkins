@@ -8,6 +8,11 @@ Enriched with content from the course:
 - <span style="color:aquamarine">Spring Framework: Spring Fundamentals</span>, by Bryan Hansen **pluralsight**
 - <span style="color:aquamarine">Mastering Spring Framework Fundamentals</span>, by Matthew Speak. O'Reilly. **pluralsight**
 
+7. Proxy
+8. JDBC
+9. AOP
+10. MVC
+
 ## Spring online resources
 Spring Framework documentation:
 1. https://docs.spring.io/spring-framework/docs/current/reference/html/ or https://docs.spring.io/spring-framework/docs for the documentation of all the versions.  
@@ -15,6 +20,27 @@ Spring Framework documentation:
 3. Spring guides https://spring.io/guides. Guides by topic areas.
 
 The documentation for Spring 5 onwards has been nicely split into different technologies stack. See for example, we can read the "core" part of Spring only at https://docs.spring.io/spring-framework/docs/5.3.7/reference/html/.
+
+## IntelliJ shortcuts
+^H: class hierarchy
+^P: method parameters
+^(alt+H): method calls hierarchy
+^F12
+shift+F9: debug
+F8: forward
+F9: finish
+debug -> Evaluate (icon calculator) ->^enter
+
+## CV project features
+- Input/Output through REST APIs, json/xml
+- Swagger documentation
+- asynchronous communication JMS 
+- persistence with JPA
+- Unit tests with JUnit and Mockito
+- Static code analysis with SonarLint and code coverage with Jacoco
+- Maven plugins for application server deployment and app containerization
+- API testing with Postman 
+
  
 ##  Layers in enterprise Java applications
 - Business logic: service classes, service layer
@@ -1156,10 +1182,9 @@ public class MyApp {
     }
 }
 ```
-`AnnotationConfigApplicationContext` extends from `AbstractApplicationContext`, which implements `ApplicationContext` interface. See the hierarchy of `ApplicationContext`. The abstract class `AbstractApplicationContext` implements methods `start()` and `close()` which start and stop the container (it got these methods from other interfaces appearing higher in the hierarchy). When the method `close()` is called by Spring and all beans start to be destroyed (memory freed and references deleted, I think), somewhere Spring calls the `destroy()` method of the callback interface `DisposableBean`, in the beans that implement it. This give chance to these beans to do some clean-up tasks, or <u>to free resources (connections, threads, etc)</u> explicitly, if needed, before disappearing forever (destroyed). 
+`AnnotationConfigApplicationContext` extends from `AbstractApplicationContext`, which implements `ApplicationContext` interface. See the hierarchy of `ApplicationContext`. The abstract class `AbstractApplicationContext` implements methods `start()` and `close()` which start and stop the container (it got these methods from other interfaces appearing higher in the hierarchy). When the method `close()` is called by Spring and all beans start to be destroyed (memory freed and references deleted, I think), somewhere Spring calls the `destroy()` method of the callback interface `DisposableBean`, in the beans that implement it, before destroying them. This give chance to the beans to do some clean-up tasks, or <u>to free resources (connections, threads, etc)</u> explicitly, if needed, before disappearing forever (destroyed). 
 
-
-With Spring, we can make a Java application listen for its JVM shutting down, and close its context as response (call method `close()` on the context), so we don't need to do it explicitly as in the example above. We do it by registering a shutting down hook with the JVM runtime in the application context instance. The hook will be called `SpringContextShutdownHook`:
+With Spring, we can make a Java application listen for its JVM shutting down, and close its context as response (call method `close()` on the context), so we don't need to do it explicitly, as in the example above. We do it by registering a shutting down hook with the JVM runtime in the application context instance. The hook will be called `SpringContextShutdownHook`:
 ```java
 public class MyApp {
     public static void main(String[] args) {
@@ -1182,10 +1207,47 @@ If a bean annotated with `InitializingBean` is of scope _prototype_, whenever we
 even if one of such beans implements interface `DisposableBean`, method `destroy()` on them will not be called at when the container closes.
 
 ### Annotations `@PostConstruct` and `@PreDestroy`
-The recommended way to interact with beans lifecycle is through the JSR-250 annotation
-... not explained properly
+The callback annotations `InitializingBean` and ` DisposableBean` are a Spring thing. Instead of them, it is recommended to use the JSR-250 annotations `@PostConstruct` and `@PreDestroy`. A bean's method annotated with `@PostConstruct` will be called, also through a callback mechanisms, after all properties (fields or dependencies) of the bean have been set. A method annotated with `PreDestroy`, will be called instead before the bean is destroyed (its memory freed and its reference deleted, I think). We can name these methods any way. Still, we need to close the context explicitly, or register a shutdown hook in the JVM as we did before, if we want the `@PreDestroy` method to be called: 
+```java
+@Service
+public class EmployeeService {
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @PostConstruct
+    public void myPostConstruct() throws Exception {
+        employeeRepository.loadStaticData();
+    }
+
+    @PreDestroy
+    public void myPreDestroy() throws Exception {
+        System.out.println("Destroying service bean ...");
+    }
+}
+```
+
+
+
 ### Methods `init()` and `destroy()` of the `@Bean` annotation
 ... not explained properly
+
+## The complete sequence of Spring container callbacks on a bean ?
+1. constructor
+2. setters
+3. set context (bean name, class loader, bean factory)
+4. post-processing
+5. usage
+6. application context close
+7. application shutdown
+8. call finalize()
+
+## Application container callbacks and events
+There are also events for the application context itself, not only for the beans it defines.
+There is the event of "application context started" which we can listen for. We can create a bean that detects when the its very application context has been started. But it seems this works only if we start the application context manually.
+There is an event called refresh to refresh the context ?! 
+
+aqui
 
 ## Properties and Spring Expression Language, SpEL ?
 The Spring Expression Language can be used to:
