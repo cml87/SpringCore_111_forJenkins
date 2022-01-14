@@ -1303,7 +1303,7 @@ As can be seen, the application context has gone through the events refresh, fir
 What is context start ???
 
 
-aqui
+aqui 4. 16:03
 
 ## Properties and Spring Expression Language, SpEL ?
 The Spring Expression Language can be used to:
