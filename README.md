@@ -1227,25 +1227,57 @@ public class EmployeeService {
 }
 ```
 
-
-
 ### Methods `init()` and `destroy()` of the `@Bean` annotation
 ... not explained properly
 
 ## The complete sequence of Spring container callbacks on a bean ?
-1. constructor
-2. setters
-3. set context (bean name, class loader, bean factory)
+1. constructor call
+2. setters call
+3. set context (bean name, class loader, bean factory) methods call
 4. post-processing
 5. usage
 6. application context close
 7. application shutdown
-8. call finalize()
+8. call finalize() 
 
-## Application container callbacks and events
-There are also events for the application context itself, not only for the beans it defines.
-There is the event of "application context started" which we can listen for. We can create a bean that detects when the its very application context has been started. But it seems this works only if we start the application context manually.
-There is an event called refresh to refresh the context ?! 
+## Application container callbacks and events ?
+There are lifecycle callback methods, or events rather, for the application context too. The application context (the container) itself emits events during its lifecycle. We can listen for the start of the context event with the following class:
+```java
+@Component
+public class MyApplicationListener implements ApplicationListener<ContextStartedEvent> {
+    // the event will contain the application context object, so we can do things with it programmatically
+    @Override
+    public void onApplicationEvent(ContextStartedEvent event) {
+        System.out.println("Application context is created!");
+        //ApplicationContext applicationContext = event.getApplicationContext();
+    }
+}
+```
+Interface `ApplicationListener` is a generic interface taking as parameter an application event. The application events will be the concrete classes that extend the abstract class `ApplicationEvent`. See hierarchy of `ApplicationEvent`. These classes include `ContextStartedEvent`, `ContextClosedEvent` and `ContextRefreshEvent`. An application context refresh re-runs all the initialization of the context; it is useful in applications that need to change its behaviour without shutting them down. Notice that the `ContextStartedEvent` will contain the context itself, so we can do thinks with it programmatically, such as examining all its beans.  
+
+Strangely, the class implementing the `ApplicationListener` interface need itself to be a bean in the container (`@Component`) for the listening to work. Moreover, the listening works only if we start the application context explicitly, invoking `start()`. This is how we test this from the main():
+```java
+public class MyApp {
+
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext("com.example.matthew.lifecycle");
+        ((AnnotationConfigApplicationContext)applicationContext).start();
+        ((AnnotationConfigApplicationContext)applicationContext).registerShutdownHook();
+        System.out.println("app is working ...");
+        //((AnnotationConfigApplicationContext)applicationContext).close();
+
+    }
+}
+```
+```text
+Loading static data ..
+Application context is created!
+app is working ...
+Destroying service bean ...
+```
+Starting the application context explicitly give us more control over our Spring application.
+
+
 
 aqui
 
