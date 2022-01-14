@@ -1253,7 +1253,7 @@ public class MyApplicationListener implements ApplicationListener<ContextStarted
     }
 }
 ```
-Interface `ApplicationListener` is a generic interface taking as parameter an application event. The application events will be the concrete classes that extend the abstract class `ApplicationEvent`. See hierarchy of `ApplicationEvent`. These classes include `ContextStartedEvent`, `ContextClosedEvent` and `ContextRefreshEvent`. An application context refresh re-runs all the initialization of the context; it is useful in applications that need to change its behaviour without shutting them down. Notice that the `ContextStartedEvent` will contain the context itself, so we can do thinks with it programmatically, such as examining all its beans.  
+Interface `ApplicationListener` is a generic interface taking as parameter an application event. The application events will be the concrete classes that extend the abstract class `ApplicationEvent`. See hierarchy of `ApplicationEvent`. These classes include `ContextStartedEvent`, `ContextClosedEvent` and `ContextRefreshEvent`. An application context refresh re-runs all the initialization of the context (beans initialization and autowiring); it is useful in applications that need to change its behaviour without shutting them down. Notice that the `ContextStartedEvent` will contain the context itself, so we can do thinks with it programmatically, such as examining all its beans.  
 
 Strangely, the class implementing the `ApplicationListener` interface need itself to be a bean in the container (`@Component`) for the listening to work. Moreover, the listening works only if we start the application context explicitly, invoking `start()`. This is how we test this from the main():
 ```java
@@ -1277,6 +1277,30 @@ Destroying service bean ...
 ```
 Starting the application context explicitly give us more control over our Spring application.
 
+`ContextStartedEvent` is one of the subclasses of `ApplicationContextEvent`. We can listen for all the events under `ApplicationContextEvent` passing this class to the generic interface `ApplicationListener` above. We can go a step higher in the hierarchy and listen for all `ApplicationEvent`, which is a superclass of `ApplicationContextEvent`:
+```java
+@Component
+public class MyApplicationListener implements ApplicationListener<ApplicationEvent> {
+
+    // the event will contain the application context object, so we can do things with it programmatically
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        System.out.println(" -> Application event: "+ event.toString());
+        //ApplicationContext applicationContext = event.getApplicationContext();
+    }
+}
+```
+```text
+Loading static data ..
+ -> Application event: org.springframework.context.event.ContextRefreshedEvent[source=org.springframework.context.annotation.AnnotationConfigApplicationContext@306a30c7, started on Fri Jan 14 10:41:27 CET 2022]
+ -> Application event: org.springframework.context.event.ContextStartedEvent[source=org.springframework.context.annotation.AnnotationConfigApplicationContext@306a30c7, started on Fri Jan 14 10:41:27 CET 2022]
+app is working ...
+ -> Application event: org.springframework.context.event.ContextClosedEvent[source=org.springframework.context.annotation.AnnotationConfigApplicationContext@306a30c7, started on Fri Jan 14 10:41:27 CET 2022]
+Destroying service bean ...
+```
+As can be seen, the application context has gone through the events refresh, first, then start, then close.
+
+What is context start ???
 
 
 aqui
