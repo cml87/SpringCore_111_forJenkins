@@ -22,10 +22,10 @@ Spring Framework documentation:
 The documentation for Spring 5 onwards has been nicely split into different technologies stack. See for example, we can read the "core" part of Spring only at https://docs.spring.io/spring-framework/docs/5.3.7/reference/html/.
 
 ## IntelliJ shortcuts
-^H: class hierarchy
+^H: class hierarchy, for classes in the class path
 ^P: method parameters
 ^(alt+H): method calls hierarchy
-^F12
+^F12: methods of a class or interface
 shift+F9: debug
 F8: forward
 F9: finish
@@ -584,7 +584,7 @@ The configuration class can be annotated with `@Configuration` which give other 
 
 #### Java: constructor injection
 
-The example below will create our beans exactly in the same way as the previously seen `beans.xml` file. As can be seen, now the beans will be created through methods annotated with `@Bean`, which will be called automatically by Spring when the application context is started. These will be beans "factory methods". The `@Bean` annotation can be used only at a method level.
+The example below will create our beans exactly in the same way as the previously seen `beans.xml` file. As can be seen, now the beans will be created through methods annotated with `@Bean`, which will be called automatically by Spring when the application context is started. These will be beans "factory methods". Spring will call them whenever it needs (for injection) a bean of the type the method returns. The `@Bean` annotation can be used only at a method level.
 
 ```java
 //@Configuration ??
@@ -716,6 +716,7 @@ If we want to use a Java class to define where we want Spring to look for beans 
 }
 ```
 To pass several base packages to scan for beans we list them as `@ComponentScan({"com.example",com.plumbe})`.
+Notice that still our configuration class can explicitly define beans for the context as well, by means of `@Bean` annotated factory methods, as we saw before.
 
 If instead we want to do component scanning through xml, we should set the applicationContext.xml as:
 ```xml
