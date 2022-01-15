@@ -1303,7 +1303,42 @@ As can be seen, the application context has gone through the events refresh, fir
 What is context start ???
 
 
-aqui 4. 16:03
+## The `Aware` interface ?
+The `Aware` interfaces give callbacks to interact with internal components of the Spring framework. This is a low level feature that allows to customize whatever aspect of the container.
+
+`Aware` is a marker interface that tells to the Spring container that classes that implement it need to receive callbacks, to pass them some lower level aspect of the Spring framework itself.
+
+One of the interfaces that extends `Aware` is `ApplicationContextAware`. If we implement it in a bean, we could catch the application context, through tis callback method `setApplicationContext` which will be passed in the application context:
+```java
+@Service
+public class EmployeeService implements ApplicationContextAware, BeanFactoryAware {
+
+    private ApplicationContext applicationContext;
+    private BeanFactory beanFactory;
+
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    public EmployeeService(EmployeeRepository employeeRepository){
+        this.employeeRepository = employeeRepository;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+        System.out.println("Here is the app context: " + applicationContext);
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
+        System.out.println("Here is the app bean factory: " + beanFactory);
+    }
+}
+```
+Another interface extending `Aware` is `BeanFactoryAware`, which does the same but with the bean factory.
+
+There is also `ApplicationEventPublisher` which is useful when we need to create custom events between Spring managed beans, in an observable-observer fashion. This allows keeping beans decoupled between them, communicating through events. Spring internally used this interface.
 
 ## Properties and Spring Expression Language, SpEL ?
 The Spring Expression Language can be used to:
