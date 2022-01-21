@@ -853,6 +853,9 @@ In this example we are using a SpEL expression in the `@Value` annotation, but i
 
 When we need to pass primitive values to a setter annotated with `@Autowired`, the same approach is used. If we don't annotate the setter with `@Autowired`, and only use `@Value` annotation, the setter will still be called to set the dependency, but in the BeanPostProcessor class. This is when the methods annotated with `@Value` are called, it seems. 
 
+In the example above we have injected primitive values into fields of our class using constructor injection. We could similarly inject reference types, or beans, provided they are in registered in the context too, as we'll see later. Notice that these things are actually injected into the constructor (or setter, for the case of setter injection) parameters. The injection into a class field only happens when we set it with the received parameter explicitly in the constructor body with `this.a = a`, for example. Nothing stops us from using the received parameter for something else, for example, to set an inherited field from an abstract class that does not appear explicitly in the body of our class, or to just print our what Spring has sent to the constructor for the injection. 
+
+
 #### Autowiring: setter injection
 Annotating a setter with `@Autowired` makes Spring to automatically call it to inject a dependency the setter's class needs. This call happens after the default constructor of this class is called to get its bean, either explicitly in a `@Bean` annotated method of a Java configuration class, or implicitly if that class is annotated with `@Component` and included in the components scan. This is how setter injection works: the no-args constructor of the bean is called first, and then the `@Autowired` annotated setter is called to inject the dependency.
 
