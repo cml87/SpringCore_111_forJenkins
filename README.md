@@ -486,6 +486,61 @@ Setter injection with a xml configuration is performed as:
 
 Notice that the dependency `spellChecker` of bean `emailClient` is of reference type. That's why we use `ref` to specify which bean in the Spring IoC container, it should be wired to. When a dependency is of primitive type, we use `value`.
 
+When we want to inject a list of objects into a bean, using setter injection, the mechanism is similar. Here is an example, with a `Flight` beans an its `Passanger` beans:
+```java
+public class Passenger {
+    private String name;
+    private String country;
+
+    // getters and setters
+}
+```
+```java
+public class Flight {
+
+    private String id;
+    private String company;
+    private List<Passenger> passengers;
+
+    // getters and setters
+}
+```
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="jim" class ="com.example.aop.flightsapp.domain.Passenger">
+        <property name="name" value="Jim"/>
+        <property name="country" value="US" />
+    </bean>
+
+    <bean id="jack" class ="com.example.aop.flightsapp.domain.Passenger">
+        <property name="name" value="Jack"/>
+        <property name="country" value="UK" />
+    </bean>
+
+    <bean id="jill" class ="com.example.aop.flightsapp.domain.Passenger">
+        <property name="name" value="Jill"/>
+        <property name="country" value="AU" />
+    </bean>
+
+    <bean id="flight" class= "com.example.aop.flightsapp.domain.Flight">
+        <property name="id" value="AA1234"/>
+        <property name="company" value="ABC Flights"/>
+        <property name="passengers">
+            <list>
+                <ref bean="jim"/>
+                <ref bean="jack"/>
+                <ref bean="jill"/>
+            </list>
+        </property>
+    </bean>
+
+</beans>
+```
+
 #### xml: autowiring
 Yes, we can do autowiring with xml configuration as well, without annotations.
 
