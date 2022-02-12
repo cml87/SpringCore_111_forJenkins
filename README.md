@@ -1825,6 +1825,61 @@ Wed Jan 12 09:39:19 CET 2022
 Salut mon ami!
 ```
 
+## Spring proxy: CGLIB
+We are going to create a proxy for a class that doesn't implement any interface, using Spring. I.e. Spring will use CGLIB for the proxy class. The proxy class will intercept any call to methods of the proxied object. The proxied object will be `Car`. This is how we do it:
+```java
+public class Car {
+    public void start(){ System.out.println("run run !!"); }
+}
+```
+```java
+public class AdviceInterceptor implements MethodInterceptor {
+
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        System.out.println("Starting the car ...");
+        Object result = invocation.proceed();
+        System.out.println("The car has been started");
+        return result;
+    }
+}
+```
+```java
+public class MyApp {
+    public static void main(String[] args) {
+
+        Car car = new Car();
+        System.out.println("- Call to car object method without proxy: ");
+        car.start();
+
+        Car car1 = new Car();
+        ProxyFactory proxyFactory = new ProxyFactory();
+        proxyFactory.addAdvice(new AdviceInterceptor());
+        proxyFactory.setTarget(car1);
+
+        Car proxiedCar = (Car) proxyFactory.getProxy();
+        System.out.println("- Call to car object method without proxy: ");
+        proxiedCar.start();
+
+        System.out.println("proxy car object is of type: "  + proxiedCar.getClass().getName());
+    }
+}
+```
+This will print
+```text
+- Call to car object method without proxy: 
+run run !!
+- Call to car object method without proxy: 
+Starting the car ...
+run run !!
+The car has been started
+proxy car object is of type: com.example.matthew.springproxy.Car$$EnhancerBySpringCGLIB$$74825f3f
+```
+
+
+
+
+
 ### Proxy: Spring dynamic proxies, with and without inteface ?
 Spring allows creating proxies dynamically more easily. If the proxied class implements some interfaces, Spring will use JDK dynamic proxies. If we are proxying a class that implements no interface, Spring will use CGLIB generated dynamic proxy. 
 
