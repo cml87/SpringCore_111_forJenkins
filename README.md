@@ -1833,7 +1833,7 @@ public class Car {
 }
 ```
 ```java
-public class AdviceInterceptor implements MethodInterceptor {
+public class CarAdviceInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -1854,7 +1854,7 @@ public class MyApp {
 
         Car car1 = new Car();
         ProxyFactory proxyFactory = new ProxyFactory();
-        proxyFactory.addAdvice(new AdviceInterceptor());
+        proxyFactory.addAdvice(new CarAdviceInterceptor());
         proxyFactory.setTarget(car1);
 
         Car proxiedCar = (Car) proxyFactory.getProxy();
@@ -1876,8 +1876,79 @@ The car has been started
 proxy car object is of type: com.example.matthew.springproxy.Car$$EnhancerBySpringCGLIB$$74825f3f
 ```
 
+### Spring proxy: JDK Dynamic proxy
+If we specify any interface, the `ProxyFactory` from Spring will use JDK Dynamic proxy to implement the proxy. The proxy object will implement the interface and will proxy all the interface methods. We can use method `setInterfaces` to add one or more interfaces to the proxy class? If we don't do it, Spring will still use CGLIB!
 
+In the example below, any call to the target class will go through the Proxy object, and its interceptor will intercept any interface call to the target class methods. Notice that the proxy object will not be a subclass of target class, so we'll not type cast the proxy object to target class. We'll proxy a class called `PersonImp`, which implements interface `Person`, so Spring will use JDK Dynamic proxy in this case:
+```java
+public interface Person {
+    void greet();
+    void greetInFrench();
+}
+```
+```java
+public class PersonImp implements Person {
 
+    @Override
+    public void greet(){ System.out.println("Hello there !"); }
+
+    @Override
+    public void greetInFrench() { System.out.println("Salut mon ami!"); }
+}
+```
+```java
+public class PersonAdviceInterceptor implements MethodInterceptor {
+
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        System.out.println("<I want to say:");
+        Object result = invocation.proceed();
+        System.out.println("That's all>");
+        return result;
+    }
+}
+```
+```java
+public class MyApp {
+
+    public static void main(String[] args) {
+
+        Person person = new PersonImp();
+        person.greet();
+        person.greetInFrench();
+
+        System.out.println("Now we'll use tht proxy class:");
+        ProxyFactory proxyFactory1 = new ProxyFactory();
+        proxyFactory1.addAdvice(new PersonAdviceInterceptor());
+        proxyFactory1.setInterfaces(Person.class);
+        proxyFactory1.setTarget(person);
+                
+        Person person1 = (Person) proxyFactory1.getProxy();
+        person1.greet();
+        person1.greetInFrench();
+
+        System.out.println("proxy person object is of type: "  + person1.getClass().getName());
+    }
+}
+```
+This will print
+```text
+Hello there !
+Salut mon ami!
+Now we'll use tht proxy class:
+<I want to say:
+Hello there !
+That's all>
+<I want to say:
+Salut mon ami!
+That's all>
+proxy person object is of type: com.sun.proxy.$Proxy0
+```
+It seems that the pattern is always create the proxy object, add the advice, add the interfaces if present and then add the target (proxied object).
+
+Creating proxies with Spring using the `ProxyFactory` class (with the target class implementing an interfaces or not) has the same effects as using the `@Around` annotation from Spring AOP. In fact, notice that in the examples above we have called always the method `ProxyFactory.addAdvice()`, passing in a class that works as an `@Around` annotated method of an aspect class.
+
+Notice also that in the examples above we have altered the behaviour of a method in a class by proxing it, but we have not added any new method to the class. Spring AOP Introductions instead add new methods!
 
 
 ### Proxy: Spring dynamic proxies, with and without inteface ?
