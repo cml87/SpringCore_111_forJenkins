@@ -1671,11 +1671,11 @@ The proxy design pattern is a pattern that allows us to replace the behaviour of
 
  In the proxy pattern implementations through interface, the proxy class will be a new class implementing the same interface as the proxied, or target class. Therefore, in our code, instances of this new 'proxy' class will be able to substitute the instances of the target class (in general, if we have followed good Java design principles, I think).
 
-2. The target class does not implements any interface: In this case, we can implement the new proxy class by sublcassing the target class. This subclass will overwrite methods of the parent (target proxied) class introducing the new behaviour and, as for interfaces, its instances will be able to substitute the instances of the proxied class in the code. 
+2. The target class does not implement any interface: In this case, we can implement the new proxy class by subclassing the target class. This subclass will overwrite methods of the parent (target proxied) class introducing the new behaviour and, as for interfaces, its instances will be able to substitute the instances of the proxied class in the code. 
 
-When defining proxies for classes using Spring, if the class implements some interfaces Spring will use the JDK dynamic proxy mechanisms. If not, it will use CGLIB, to create the subclass at run time.
+When defining proxies for classes using Spring, if the class implements some interfaces Spring will use the JDK dynamic proxy mechanisms. If not, it will use CGLIB, to create the proxy subclass at run time.
 
-### Proxy: handmade
+### Proxy: handmade with interface
 A hand made implementation of the proxy pattern is the fallowing. Consider a `PersonImpl` class implementing interface `Person`. The proxy interface will be `Person`, the target class will be `PersonImpl` and the behaviour of this class will be changed by changing what we get when calling its method `greet()`:
 ```java
 public interface Person {
@@ -1748,7 +1748,7 @@ instead of just `Hello there!`. As can be seen, a proxy class implements and wra
  
 Handcoded proxies, like the one we just showed, have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through. Dynamic proxies solve this issue.
 
-### Proxy: JDK dynamic proxy ?
+### Proxy: JDK dynamic proxy with interface ?
 The `java.lang.reflect` library from the JDK allows implementing custom dynamic proxy classes, such as the one shown below `TimestampLoggingProxy`. These proxies will be dynamic in that they will intercept all method calls of the target class in the same way (adding the same behaviour) without needing to call them explicitly. They will use reflections instead:
 ```java
 import java.lang.reflect.InvocationHandler;
@@ -1825,8 +1825,8 @@ Wed Jan 12 09:39:19 CET 2022
 Salut mon ami!
 ```
 
-### Proxy: Spring dynamic proxies ?
-Spring allows creating proxies dynamically more easily. If we use interfaces to refer to the proxied object, it will use JDK dynamic proxies. If we are proxying an object that implements no interface, it will use Spring CGLIB generated dynamic proxy. 
+### Proxy: Spring dynamic proxies, with and without inteface ?
+Spring allows creating proxies dynamically more easily. If the proxied class implements some interfaces, Spring will use JDK dynamic proxies. If we are proxying a class that implements no interface, Spring will use CGLIB generated dynamic proxy. 
 
 Spring CGLIB is a strategy to genera a proxy by subclassing the proxied class on the fly (in the JVM). The new subclass, will overwrite the proxied methods of the superclass. Here is how it would be:
 ```java
