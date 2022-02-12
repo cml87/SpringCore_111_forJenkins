@@ -1665,7 +1665,15 @@ If we pass to `AnnotationConfigApplicationContext` a list of configuration class
 
 ## The proxy design pattern
 
-The proxy design pattern is a pattern that allow us to inject behaviour into an existing class without modifying it, by intercepting calls to its methods. The target, or proxied, class needs to have its "behaviour" defined by an interface it implements. The proxy class will proxy the target class through that interface.
+The proxy design pattern is a pattern that allows us to replace the behaviour of an existing class in our code, giving the impression that we are injecting some additional behaviour to it, while we don't modify it at all. It works by intercepting the calls to that class's methods. Depending on whether the class we want to proxy (target class) implements interfaces or not, there are two mechanisms allowing to implement this pattern in Java.
+
+1. The target class implements some interfaces: In this case we can implement the proxy pattern quite simply by hand, as we'll see below, although with many limitations. These limitations are overcome if instead we use the JDK dynamic proxy mechanisms, available in every JDK implementation. 
+
+ In the proxy pattern implementations through interface, the proxy class will be a new class implementing the same interface as the proxied, or target class. Therefore, in our code, instances of this new 'proxy' class will be able to substitute the instances of the target class (in general, if we have followed good Java design principles, I think).
+
+2. The target class does not implements any interface: In this case, we can implement the new proxy class by sublcassing the target class. This subclass will overwrite methods of the parent (target proxied) class introducing the new behaviour and, as for interfaces, its instances will be able to substitute the instances of the proxied class in the code. 
+
+When defining proxies for classes using Spring, if the class implements some interfaces Spring will use the JDK dynamic proxy mechanisms. If not, it will use CGLIB, to create the subclass at run time.
 
 ### Proxy: handmade
 A hand made implementation of the proxy pattern is the fallowing. Consider a `PersonImpl` class implementing interface `Person`. The proxy interface will be `Person`, the target class will be `PersonImpl` and the behaviour of this class will be changed by changing what we get when calling its method `greet()`:
@@ -1736,7 +1744,7 @@ I just want to say ...
 Hello there!
 That's it!
 ```
-istead of just `Hello there!`. As can be seen, a proxy class implements and wraps an interface, and thus all classes implementing that interface.
+instead of just `Hello there!`. As can be seen, a proxy class implements and wraps an interface, and thus all classes implementing that interface. The keys are two. First declare a 'delegate' field of the type of the proxied class, and which will be set through the constructor of the proxy class. Second, overwrite the method(s) of the proxy interface, possibly calling the proxied class (delegate) version of the method. 
  
 Handcoded proxies, like the one we just showed, have disadvantages. One is when the proxy interface changes adding more methods. In this case we'll have to implement the new methods not only in the target classes, but also in the proxy class. Moreover, if the behaviour we want to add through the proxy mechanisms to the new method is the same we added for the other previous methods, we'll have to copy-paste code (extracting it to a private method is less bad but still inelegant). In other words, the poxy class is tightly coupled to the interface it is proxying through. Dynamic proxies solve this issue.
 
@@ -1753,11 +1761,13 @@ public class TimestampLoggingProxy implements InvocationHandler {
     // this will be the delegate
     private Object delegate;
 
-    // notice the private constructor
+    // Notice the private constructor, we'll not call it from our code. We'll call
+    // the factory method bellow insetead
     private TimestampLoggingProxy(Object delegate) {
         this.delegate = delegate;
     }
 
+    // Proxy factory method
     public static Object getProxyFor(Object o){
          return Proxy.newProxyInstance(
                  o.getClass().getClassLoader(),
@@ -1767,7 +1777,7 @@ public class TimestampLoggingProxy implements InvocationHandler {
     }
 
 
-   // This method will be automatically invoked when any method of the target class which is being proxied through is invoked.
+   // This method will be automatically invoked when any method of the target class which is being proxied is invoked.
    // It will receive in the parameters the proxy object `proxy`, the method which is being invoked `method` and the arguments
     // `args` passed to that method being invoked. We can do whatever we want with this information in the `invoke()` method.
     // We could even decide to not call the method of the target class at all.
@@ -1875,7 +1885,7 @@ In the main() we then do:
         orderService.placeOrder();
 ```
 Here `orderService` will be a CGLIB proxy, not the actual orderService bean, because of the `@Transactional` annotation in the service class.
-The `OrderService` bean may have as dependency some repositories, that perform operations on e database. With the `@Transactional` annotation we can make the service methods transactional. 
+The `OrderService` bean may have as dependency some repositories, that perform operations on e database. With the `@Transactional` annotation we can make the service methods transactional ??. 
 
 I think the transaction manager is a thing of a RDBMS, so we need to choose one, like H2. Then we plug it into a method of a service class to make it transactional. The method will use a repository class to perform operations over a db.
 
