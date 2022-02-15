@@ -1825,8 +1825,12 @@ Wed Jan 12 09:39:19 CET 2022
 Salut mon ami!
 ```
 
-## Spring proxy: CGLIB
-We are going to create a proxy for a class that doesn't implement any interface, using Spring. I.e. Spring will use CGLIB for the proxy class. The proxy class will intercept any call to methods of the proxied object. The proxied object will be `Car`. This is how we do it:
+## Spring proxy: CGLIB. ProxyFactory
+We are going to create a proxy for a class that doesn't implement any interface, using Spring. I.e. Spring will use CGLIB for the proxy class. The proxy class will intercept any call to methods of the proxied object. The proxied object will be `Car`.
+
+We'll be using the Spring's `ProxyFactory` class. This is a factory for Spring's AOP proxies, to be used programmatically. 
+
+This is how we do it:
 ```java
 public class Car {
     public void start(){ System.out.println("run run !!"); }
@@ -1876,7 +1880,7 @@ The car has been started
 proxy car object is of type: com.example.matthew.springproxy.Car$$EnhancerBySpringCGLIB$$74825f3f
 ```
 
-### Spring proxy: JDK Dynamic proxy
+### Spring proxy: JDK Dynamic proxy. ProxyFactory
 If we specify any interface, the `ProxyFactory` from Spring will use JDK Dynamic proxy to implement the proxy. The proxy object will implement the interface and will proxy all the interface methods. We can use method `setInterfaces` to add one or more interfaces to the proxy class? If we don't do it, Spring will still use CGLIB!?
 
 In the example below, any call to the target class will go through the Proxy object, and its interceptor will intercept any interface call to the target class methods. Notice that the proxy object will not be a subclass of target class, so we'll not type cast the proxy object to target class. We'll proxy a class called `PersonImp`, which implements interface `Person`, so Spring will use JDK Dynamic proxy in this case:
@@ -1948,7 +1952,7 @@ Either the class we are proxying implements an interface or not, in order to get
 
 Creating proxies with Spring using the `ProxyFactory` class (with the target class implementing an interfaces or not) has the same effects as using the `@Around` annotation from Spring AOP. In fact, notice that in the examples above we have called always the method `ProxyFactory.addAdvice()`, passing in a class that works as an `@Around` annotated method of an aspect class.
 
-Notice also that in the examples above we have altered the behaviour of a method in a class by proxing it, but we have not added any new method to the class. Spring AOP Introductions instead add new methods!
+Notice also that in the examples above we have altered the behaviour of a method in a class by proxing it, but we have not added any new method to the class. Spring AOP Introductions instead add new methods, still using the same `ProxyFactory` class from Spring. See Spring AOP notes.
 
 ### Proxy: Spring dynamic proxies, with and without inteface ?
 Spring allows creating proxies dynamically more easily. If the proxied class implements some interfaces, Spring will use JDK dynamic proxies. If we are proxying a class that implements no interface, Spring will use CGLIB generated dynamic proxy. 
