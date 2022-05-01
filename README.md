@@ -1,4 +1,5 @@
 # Spring Core 1
+
 In this project I will follow the 52 minutes video
 <span style="color:aquamarine">Spring Core Framework Tutorial | Full Course</span>.
 at https://www.youtube.com/watch?v=ZwcHeLhvuq4
