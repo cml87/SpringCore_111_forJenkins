@@ -1,4 +1,5 @@
-package com.programming.techie;
+package com.example;
+
 
 public class EmailApplicationTests {
 }
