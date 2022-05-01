@@ -5,7 +5,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>learn-spring-framework</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${version}</version>
 
     <name>Learn Spring Framework</name>
     <description>Demo project for Spring Core</description>
